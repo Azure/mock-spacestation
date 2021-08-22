@@ -136,7 +136,7 @@ This scheduled synchronization recreates the time delay and limited bandwidth en
     Hello! It is currently Fri Aug 20 21:10:10 UTC 2021 on the mockSpacestation! Happy Hacking!
     ```
 
-3. On the Mock Spacestation, You can inspect the contents of `azure-sync.log` to see file and directory transmission history and transfer speeds:
+3. On the Mock Spacestation, you can inspect the contents of `azure-sync.log` to see file and directory transmission history and transfer speeds:
 
     ```bash
     # back on the Mock Spacestation

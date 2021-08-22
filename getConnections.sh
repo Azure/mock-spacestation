@@ -30,8 +30,8 @@ fi
 
 # parse arguments
 if [[ "$#" -lt 2 ]]; then
-   echo "writePrivateKey.sh: retrieves output from a mockSpacestation.bicep deployment and adds the current user to the KeyVault Administrator role and writes the private key to the specified file"
-   echo "usage: writePrivateKey.sh <resourceGroupName> <deploymentName>"
+   echo "getConnections.sh: retrieves output from a mockSpacestation.bicep deployment and adds the current user to the KeyVault Administrator role and writes the private key to the specified file"
+   echo "usage: getConnections.sh <resourceGroupName> <deploymentName>"
    exit 1
 fi
 
