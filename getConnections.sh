@@ -5,9 +5,9 @@
 #         Disabled because we want to split on newlines from deployment output
 #
 # getConnections.sh - retrieves output from a mockSpacestation.bicep deployment
-#   and adds the current user to the KeyVault Administrator role
-#   and writes the private key to the specified file
-#   and outputs to the user the commands to SSH to their machines
+#   and grants the current user the 'get list' KeyVault secrets access policies
+#   and writes the private key to a local file
+#   and prints SSH commands to connect to the virtual machines
 
 set -e
 
@@ -30,8 +30,8 @@ fi
 
 # parse arguments
 if [[ "$#" -lt 2 ]]; then
-   echo "writePrivateKey.sh: retrieves output from a mockSpacestation.bicep deployment and adds the current user to the KeyVault Administrator role and writes the private key to the specified file"
-   echo "usage: writePrivateKey.sh <resourceGroupName> <deploymentName>"
+   echo "getConnections.sh: retrieves output from a mockSpacestation.bicep deployment and grants the current user the 'get list' KeyVault secrets access policies, writes the private key to a local file, and prints SSH commands to connect to the virtual machines"
+   echo "usage: getConnections.sh <resourceGroupName> <deploymentName>"
    exit 1
 fi
 

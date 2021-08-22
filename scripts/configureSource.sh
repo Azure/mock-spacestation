@@ -1,18 +1,30 @@
 #!/bin/bash
+#
+# configureDestination.sh - applied to a virtual machine by an Azure Custom Script Extension resource to
+#   1. create a /home/azureuser/trials directory
+#   2. write a private key to /home/azureuser/.ssh/mockSpacestationPrivateKey
+#   3. add the destination machine's public keys to root's known_hosts
+#   4. write a /home/azureusers/sync.sh script that contains an rsync command that 
+#      clones the /trials directory to the destination machine
+#   5. register a cron job to execute the sync.sh script on a schedule
+#   *. use Bicep's replace() function to
+#        inject values wherever 'virtualMachineNameDefaultValue' appears
+#        inject values wherever 'privateKeyDefaultValue' appears
+#        inject values wherever 'hostToSyncDefaultValue' appears
 
-# setup trials directory
+# 1. setup trials directory
 mkdir /home/azureuser/trials
 echo "Hello! It is currently $(date) on the virtualMachineNameDefaultValue. Happy hacking!" >> /home/azureuser/trials/hello.txt
 chown azureuser /home/azureuser/trials
 
-# write private key
+# 2. write private key
 echo "privateKeyDefaultValue" >> /home/azureuser/.ssh/mockSpacestationPrivateKey
 chmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey
 
-# write destination machine keys to known_hosts
+# 3. write destination machine keys to known_hosts
 ssh-keyscan hostToSyncDefaultValue >> /root/.ssh/known_hosts
 
-# setup sync script
+# 4. setup sync script
 mkdir /home/azureuser/scripts
 touch /home/azureuser/scripts/sync.sh
 cat > /home/azureuser/scripts/sync.sh <<EOF
@@ -21,7 +33,6 @@ sudo rsync -arvz --bwlimit=250 -e "ssh -i /home/azureuser/.ssh/mockSpacestationP
 EOF
 chmod +x /home/azureuser/scripts/sync.sh
 
-# register cron
+# 5. register cron
 echo "* * * * * /home/azureuser/scripts/sync.sh >> /home/azureuser/azure-sync.log 2>&1" >> newJob
 crontab newJob
-crontab -l

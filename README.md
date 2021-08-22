@@ -2,7 +2,7 @@
 
 ## What is mock-spacestation?
 
-mock-spacestation is a Bicep template that deploys a Mock Spacestation and Mock Groundstation to Azure to enable developers and enthusiasts to develop and test their own workloads for space with similar constraints to those seen working with the International Space Station (ISS).
+mock-spacestation is a [Bicep template](https://aka.ms/bicep) that deploys a Mock Spacestation and Mock Groundstation to Azure to enable developers and enthusiasts to develop and test their own workloads for space with similar constraints to those seen working with the International Space Station (ISS).
 
 The Mock Groundstation and Mock Spacestation virtual machines deployed by this template are how the Azure Space team developed and tested their experiment workload while preparing for the installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.
 
@@ -136,7 +136,7 @@ This scheduled synchronization recreates the time delay and limited bandwidth en
     Hello! It is currently Fri Aug 20 21:10:10 UTC 2021 on the mockSpacestation! Happy Hacking!
     ```
 
-3. On the Mock Spacestation, You can inspect the contents of `azure-sync.log` to see file and directory transmission history and transfer speeds:
+3. On the Mock Spacestation, you can inspect the contents of `azure-sync.log` to see file and directory transmission history and transfer speeds:
 
     ```bash
     # back on the Mock Spacestation
