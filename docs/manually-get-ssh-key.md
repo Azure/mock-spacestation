@@ -1,6 +1,6 @@
 # Manually Get SSH Key
 
-If you've deployed mock-spacestation via the Azure Portal or the Azure CLI and don't have the tools available to run `getConnections.sh` and don't wish to use our development environment, you can manually retrieve the private key for SSH'ing into the Mock Groundstation and Mock Spacestation that is seeded in the KeyVault that was created as part of the deployment by granting yourself a Secrets Management Access Policy.
+If you've [deployed mock-spacestation via the Azure Portal or the Azure CLI](../README.md#Deploy-the-Template) and don't have the tools available to run `getConnections.sh` and don't wish to use our development environment, you can manually retrieve the private key for SSH'ing into the Mock Groundstation and Mock Spacestation that is seeded in the KeyVault that was created as part of the deployment by granting yourself a Secrets Management Access Policy.
 
 1. Find the Resource Group you deployed into and select the KeyVault resource:
 
