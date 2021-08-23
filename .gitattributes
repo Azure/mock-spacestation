@@ -9,6 +9,7 @@
 *.md linguist-detectable=true
 .devcontainer/** linguist-generated=true
 CODE_OF_CONDUCT.md linguist-generated=true
+CONTRIBUTING.md linguist-generated=true
 LICENSE linguist-generated=true
 SECURITY.md linguist-generated=true
 SUPPORT.md linguist-generated=true 
