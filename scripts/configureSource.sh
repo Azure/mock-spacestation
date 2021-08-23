@@ -8,9 +8,9 @@
 #      clones the /trials directory to the destination machine
 #   5. register a cron job to execute the sync.sh script on a schedule
 #   *. use Bicep's replace() function to
-#        inject values wherever 'virtualMachineNameDefaultValue' appears
-#        inject values wherever 'privateKeyDefaultValue' appears
-#        inject values wherever 'hostToSyncDefaultValue' appears
+#        inject values wherever virtualMachineNameDefaultValue appears
+#        inject values wherever privateKeyDefaultValue appears
+#        inject values wherever hostToSyncDefaultValue appears
 
 # 1. setup trials directory
 mkdir /home/azureuser/trials
