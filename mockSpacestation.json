@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.451.19169",
-      "templateHash": "11667304916948739267"
+      "version": "0.4.613.9944",
+      "templateHash": "3373983945814074975"
     }
   },
   "parameters": {
@@ -139,8 +139,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.451.19169",
-              "templateHash": "14949835044577032603"
+              "version": "0.4.613.9944",
+              "templateHash": "10011118235435377344"
             }
           },
           "parameters": {
@@ -215,8 +215,8 @@
             "networkSecurityGroupName": "[format('{0}NetworkSecurityGroup', parameters('virtualMachineName'))]",
             "virtualMachineNetworkInterfaceName": "[format('{0}NetworkInterface', parameters('virtualMachineName'))]",
             "virtualMachinePublicIPAddressName": "[format('{0}publicIPAddress', parameters('virtualMachineName'))]",
-            "destinationScript": "[replace('#!/bin/bash\n\n# setup trials directory\nmkdir /home/azureuser/trials\nchown azureuser /home/azureuser/trials\n\n# write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n', 'privateKeyDefaultValue', parameters('sshPrivateKey'))]",
-            "sourceScriptWithDestination": "[replace('#!/bin/bash\n\n# setup trials directory\nmkdir /home/azureuser/trials\necho \"Hello! It is currently $(date) on the virtualMachineNameDefaultValue. Happy hacking!\" >> /home/azureuser/trials/hello.txt\nchown azureuser /home/azureuser/trials\n\n# write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n\n# write destination machine keys to known_hosts\nssh-keyscan hostToSyncDefaultValue >> /root/.ssh/known_hosts\n\n# setup sync script\nmkdir /home/azureuser/scripts\ntouch /home/azureuser/scripts/sync.sh\ncat > /home/azureuser/scripts/sync.sh <<EOF\n#!/bin/bash\nsudo rsync -arvz --bwlimit=250 -e \"ssh -i /home/azureuser/.ssh/mockSpacestationPrivateKey\" --verbose --progress /home/azureuser/trials/* azureuser@hostToSyncDefaultValue:/home/azureuser/trials\nEOF\nchmod +x /home/azureuser/scripts/sync.sh\n\n# register cron\necho \"* * * * * /home/azureuser/scripts/sync.sh >> /home/azureuser/azure-sync.log 2>&1\" >> newJob\ncrontab newJob\ncrontab -l\n', 'hostToSyncDefaultValue', parameters('hostToSync'))]",
+            "destinationScript": "[replace('#!/bin/bash\n#\n# configureDestination.sh - applied to a virtual machine by an Azure Custom Script Extension resource to\n#   1. create a /home/azureuser/trials directory\n#   2. write a private key to /home/azureuser/.ssh/mockSpacestationPrivateKey\n#   *. use Bicep''s replace() function to inject values wherever privateKeyDefaultValue appears\n\n# 1. setup trials directory\nmkdir /home/azureuser/trials\nchown azureuser /home/azureuser/trials\n\n# 2. write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n', 'privateKeyDefaultValue', parameters('sshPrivateKey'))]",
+            "sourceScriptWithDestination": "[replace('#!/bin/bash\n#\n# configureDestination.sh - applied to a virtual machine by an Azure Custom Script Extension resource to\n#   1. create a /home/azureuser/trials directory\n#   2. write a private key to /home/azureuser/.ssh/mockSpacestationPrivateKey\n#   3. add the destination machine''s public keys to root''s known_hosts\n#   4. write a /home/azureusers/sync.sh script that contains an rsync command that \n#      clones the /trials directory to the destination machine\n#   5. register a cron job to execute the sync.sh script on a schedule\n#   *. use Bicep''s replace() function to\n#        inject values wherever virtualMachineNameDefaultValue appears\n#        inject values wherever privateKeyDefaultValue appears\n#        inject values wherever hostToSyncDefaultValue appears\n\n# 1. setup trials directory\nmkdir /home/azureuser/trials\necho \"Hello! It is currently $(date) on the virtualMachineNameDefaultValue. Happy hacking!\" >> /home/azureuser/trials/hello.txt\nchown azureuser /home/azureuser/trials\n\n# 2. write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n\n# 3. write destination machine keys to known_hosts\nssh-keyscan hostToSyncDefaultValue >> /root/.ssh/known_hosts\n\n# 4. setup sync script\nmkdir /home/azureuser/scripts\ntouch /home/azureuser/scripts/sync.sh\ncat > /home/azureuser/scripts/sync.sh <<EOF\n#!/bin/bash\nsudo rsync -arvz --bwlimit=250 -e \"ssh -i /home/azureuser/.ssh/mockSpacestationPrivateKey\" --verbose --progress /home/azureuser/trials/* azureuser@hostToSyncDefaultValue:/home/azureuser/trials\nEOF\nchmod +x /home/azureuser/scripts/sync.sh\n\n# 5. register cron\necho \"* * * * * /home/azureuser/scripts/sync.sh >> /home/azureuser/azure-sync.log 2>&1\" >> newJob\ncrontab newJob\n', 'hostToSyncDefaultValue', parameters('hostToSync'))]",
             "sourceScriptWithDestinationSource": "[replace(variables('sourceScriptWithDestination'), 'virtualMachineNameDefaultValue', parameters('virtualMachineName'))]",
             "sourceScriptWithDestinationSourceKey": "[replace(variables('sourceScriptWithDestinationSource'), 'privateKeyDefaultValue', parameters('sshPrivateKey'))]"
           },
@@ -462,8 +462,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.451.19169",
-              "templateHash": "14949835044577032603"
+              "version": "0.4.613.9944",
+              "templateHash": "10011118235435377344"
             }
           },
           "parameters": {
@@ -538,8 +538,8 @@
             "networkSecurityGroupName": "[format('{0}NetworkSecurityGroup', parameters('virtualMachineName'))]",
             "virtualMachineNetworkInterfaceName": "[format('{0}NetworkInterface', parameters('virtualMachineName'))]",
             "virtualMachinePublicIPAddressName": "[format('{0}publicIPAddress', parameters('virtualMachineName'))]",
-            "destinationScript": "[replace('#!/bin/bash\n\n# setup trials directory\nmkdir /home/azureuser/trials\nchown azureuser /home/azureuser/trials\n\n# write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n', 'privateKeyDefaultValue', parameters('sshPrivateKey'))]",
-            "sourceScriptWithDestination": "[replace('#!/bin/bash\n\n# setup trials directory\nmkdir /home/azureuser/trials\necho \"Hello! It is currently $(date) on the virtualMachineNameDefaultValue. Happy hacking!\" >> /home/azureuser/trials/hello.txt\nchown azureuser /home/azureuser/trials\n\n# write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n\n# write destination machine keys to known_hosts\nssh-keyscan hostToSyncDefaultValue >> /root/.ssh/known_hosts\n\n# setup sync script\nmkdir /home/azureuser/scripts\ntouch /home/azureuser/scripts/sync.sh\ncat > /home/azureuser/scripts/sync.sh <<EOF\n#!/bin/bash\nsudo rsync -arvz --bwlimit=250 -e \"ssh -i /home/azureuser/.ssh/mockSpacestationPrivateKey\" --verbose --progress /home/azureuser/trials/* azureuser@hostToSyncDefaultValue:/home/azureuser/trials\nEOF\nchmod +x /home/azureuser/scripts/sync.sh\n\n# register cron\necho \"* * * * * /home/azureuser/scripts/sync.sh >> /home/azureuser/azure-sync.log 2>&1\" >> newJob\ncrontab newJob\ncrontab -l\n', 'hostToSyncDefaultValue', parameters('hostToSync'))]",
+            "destinationScript": "[replace('#!/bin/bash\n#\n# configureDestination.sh - applied to a virtual machine by an Azure Custom Script Extension resource to\n#   1. create a /home/azureuser/trials directory\n#   2. write a private key to /home/azureuser/.ssh/mockSpacestationPrivateKey\n#   *. use Bicep''s replace() function to inject values wherever privateKeyDefaultValue appears\n\n# 1. setup trials directory\nmkdir /home/azureuser/trials\nchown azureuser /home/azureuser/trials\n\n# 2. write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n', 'privateKeyDefaultValue', parameters('sshPrivateKey'))]",
+            "sourceScriptWithDestination": "[replace('#!/bin/bash\n#\n# configureDestination.sh - applied to a virtual machine by an Azure Custom Script Extension resource to\n#   1. create a /home/azureuser/trials directory\n#   2. write a private key to /home/azureuser/.ssh/mockSpacestationPrivateKey\n#   3. add the destination machine''s public keys to root''s known_hosts\n#   4. write a /home/azureusers/sync.sh script that contains an rsync command that \n#      clones the /trials directory to the destination machine\n#   5. register a cron job to execute the sync.sh script on a schedule\n#   *. use Bicep''s replace() function to\n#        inject values wherever virtualMachineNameDefaultValue appears\n#        inject values wherever privateKeyDefaultValue appears\n#        inject values wherever hostToSyncDefaultValue appears\n\n# 1. setup trials directory\nmkdir /home/azureuser/trials\necho \"Hello! It is currently $(date) on the virtualMachineNameDefaultValue. Happy hacking!\" >> /home/azureuser/trials/hello.txt\nchown azureuser /home/azureuser/trials\n\n# 2. write private key\necho \"privateKeyDefaultValue\" >> /home/azureuser/.ssh/mockSpacestationPrivateKey\nchmod 600 /home/azureuser/.ssh/mockSpacestationPrivateKey\n\n# 3. write destination machine keys to known_hosts\nssh-keyscan hostToSyncDefaultValue >> /root/.ssh/known_hosts\n\n# 4. setup sync script\nmkdir /home/azureuser/scripts\ntouch /home/azureuser/scripts/sync.sh\ncat > /home/azureuser/scripts/sync.sh <<EOF\n#!/bin/bash\nsudo rsync -arvz --bwlimit=250 -e \"ssh -i /home/azureuser/.ssh/mockSpacestationPrivateKey\" --verbose --progress /home/azureuser/trials/* azureuser@hostToSyncDefaultValue:/home/azureuser/trials\nEOF\nchmod +x /home/azureuser/scripts/sync.sh\n\n# 5. register cron\necho \"* * * * * /home/azureuser/scripts/sync.sh >> /home/azureuser/azure-sync.log 2>&1\" >> newJob\ncrontab newJob\n', 'hostToSyncDefaultValue', parameters('hostToSync'))]",
             "sourceScriptWithDestinationSource": "[replace(variables('sourceScriptWithDestination'), 'virtualMachineNameDefaultValue', parameters('virtualMachineName'))]",
             "sourceScriptWithDestinationSourceKey": "[replace(variables('sourceScriptWithDestinationSource'), 'privateKeyDefaultValue', parameters('sshPrivateKey'))]"
           },
