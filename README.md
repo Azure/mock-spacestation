@@ -48,14 +48,23 @@ You have two options for deploying mock-spacestation:
 
 If you're comfortable with the command line, the Azure CLI provides the `deployment` command group to deploy the Mock Spacestation and Mock Groundstation.
 
-1. First, set yourself some environment variables to make things easier `resourceGroupName` and `deploymentName`:
+1. First, ensure you're logged into the Azure CLI and have set the subscription you want to deploy into: 
+
+    ```plaintext
+    az login
+    az account set --subscription <subscription name or ID> 
+    ```
+
+    Here's a link to the documentation if you need more help logging in: [https://docs.microsoft.com/en-us/cli/azure/reference-index?view=azure-cli-latest#az_login](https://docs.microsoft.com/en-us/cli/azure/reference-index?view=azure-cli-latest#az_login)
+
+2. Next, set yourself some environment variables to make things easier `resourceGroupName` and `deploymentName`:
 
     ```bash
     resourceGroupName="mock-spacestation"
     deploymentName="mock-spacestation-deploy"
     ```
 
-2. Then, create a resource group with `az group create`:
+3. Then, create a resource group with `az group create`:
 
     ```bash
     az group create \
@@ -63,7 +72,7 @@ If you're comfortable with the command line, the Azure CLI provides the `deploym
       --name $resourceGroupName
     ```
 
-3. And then you can deploy the Mock Spacestation and Mock Groundstation into that resource group with `az deployment group create`:
+4. And then you can deploy the Mock Spacestation and Mock Groundstation into that resource group with `az deployment group create`:
 
     ```bash
     az deployment group create \
@@ -72,7 +81,7 @@ If you're comfortable with the command line, the Azure CLI provides the `deploym
       --template-file ./mockSpacestation.json
     ```
 
-4. Once that's complete move on to [Connect to the VMs](#Connect-to-the-VMs)
+5. Once that's complete move on to [Connect to the VMs](#Connect-to-the-VMs)
 
 ### via Azure Portal
 
