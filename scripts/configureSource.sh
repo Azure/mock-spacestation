@@ -15,7 +15,8 @@
 # 1. setup trials directory
 mkdir /home/azureuser/trials
 echo "Hello! It is currently $(date) on the virtualMachineNameDefaultValue. Happy hacking!" >> /home/azureuser/trials/hello.txt
-chown azureuser /home/azureuser/trials
+chmod 755 /home/azureuser/trials
+chown -R azureuser /home/azureuser/trials
 
 # 2. write private key
 echo "privateKeyDefaultValue" >> /home/azureuser/.ssh/mockSpacestationPrivateKey
