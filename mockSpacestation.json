@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "2730823289315489541"
+      "templateHash": "12458410653924057206"
     }
   },
   "parameters": {
@@ -41,14 +41,38 @@
   "functions": [],
   "variables": {
     "adminUsername": "azureuser",
+    "userAssignedIdentityName": "mockSpacestationIdentity",
     "generateSshKeyScriptContent": "#!/bin/bash\necho -e \\'y\\' | ssh-keygen -f scratch -N \"\"\nprivateKey=$(cat scratch)\npublicKey=$(cat scratch.pub)\njson=\"{\\\"keyinfo\\\":{\\\"privateKey\\\":\\\"$privateKey\\\",\\\"publicKey\\\":\\\"$publicKey\\\"}}\"\necho \"$json\" > \"$AZ_SCRIPTS_OUTPUT_PATH\"",
     "generateSshKeyScriptName": "generateSshKey",
+    "removeSshKeyGenResultScriptName": "removeSshKeyGenResultScript",
+    "removeSshKeyGenResultScriptContent": "#!/bin/bash\n#\n# removeSshKeyResult.sh - run by a custom script deployment to\n#   1. uses the Azure CLI to delete a Deployment Script resource\n#   *. use Bicep's replace() function to\n#        inject values wherever resourceGroupNameDefaultValue appears\n#        inject values wherever generateSshKeyScriptNameDefaultValue appears\n\naz deployment-scripts delete \\\n  --resource-group \"resourceGroupNameDefaultValue\" \\\n  --name \"generateSshKeyScriptName\" \\\n  --yes\n  ",
+    "removeSshKeyGenScriptWithGroupName": "[replace(variables('removeSshKeyGenResultScriptContent'), 'resourceGroupNameDefaultValue', resourceGroup().name)]",
+    "removeSshKeyGenScriptWithGroupNameAndScriptName": "[replace(variables('removeSshKeyGenScriptWithGroupName'), 'generateSshKeyScriptName', variables('generateSshKeyScriptName'))]",
     "keyvaultName": "[toLower(format('mockisskv{0}', uniqueString(resourceGroup().id)))]",
     "keyvaultTenantId": "[subscription().tenantId]",
     "privateKeySecretName": "sshPrivateKey",
     "publicKeySecretName": "sshPublicKey"
   },
   "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2018-11-30",
+      "name": "[variables('userAssignedIdentityName')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "name": "[guid(resourceGroup().id, resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName')))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))).principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]"
+      ]
+    },
     {
       "type": "Microsoft.KeyVault/vaults",
       "apiVersion": "2019-09-01",
@@ -105,6 +129,36 @@
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deploymentScripts', variables('generateSshKeyScriptName'))]",
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "[variables('removeSshKeyGenResultScriptName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]": {}
+        }
+      },
+      "properties": {
+        "azCliVersion": "2.25.0",
+        "cleanupPreference": "OnSuccess",
+        "retentionInterval": "P1D",
+        "scriptContent": "[variables('removeSshKeyGenScriptWithGroupNameAndScriptName')]",
+        "timeout": "PT30M"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deploymentScripts', variables('generateSshKeyScriptName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'mockGroundstationVm')]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyvaultName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', split(format('{0}/{1}', variables('keyvaultName'), variables('privateKeySecretName')), '/')[0], split(format('{0}/{1}', variables('keyvaultName'), variables('privateKeySecretName')), '/')[1])]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', split(format('{0}/{1}', variables('keyvaultName'), variables('publicKeySecretName')), '/')[0], split(format('{0}/{1}', variables('keyvaultName'), variables('publicKeySecretName')), '/')[1])]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))))]",
+        "[resourceId('Microsoft.Resources/deployments', 'mockSpacestationVm')]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentityName'))]"
       ]
     },
     {

@@ -5,9 +5,16 @@
 // Administrator Values
 var adminUsername = 'azureuser'
 
+// User Assigned Identity Values
+var userAssignedIdentityName = 'mockSpacestationIdentity'
+
 // SSH Key Generation Script Values
 var generateSshKeyScriptContent = loadTextContent('./scripts/generateSshKey.sh')
 var generateSshKeyScriptName = 'generateSshKey'
+var removeSshKeyGenResultScriptName = 'removeSshKeyGenResultScript'
+var removeSshKeyGenResultScriptContent = loadTextContent('./scripts/removeSshKeyResult.sh')
+var removeSshKeyGenScriptWithGroupName = replace(removeSshKeyGenResultScriptContent, 'resourceGroupNameDefaultValue', resourceGroup().name)
+var removeSshKeyGenScriptWithGroupNameAndScriptName = replace(removeSshKeyGenScriptWithGroupName, 'generateSshKeyScriptName', generateSshKeyScriptName)
 
 // KeyVault Values
 var keyvaultName = toLower('mockisskv${uniqueString(resourceGroup().id)}')
@@ -34,6 +41,26 @@ param spacestationLocation string = 'australiaeast'
 //////////
 // MAIN
 //////////
+
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: userAssignedIdentityName
+  location: resourceGroup().location    
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: '${guid(resourceGroup().id, userAssignedIdentity.id)}'
+  scope: resourceGroup()
+  properties: {
+    // The 'Contributor' RBAC role definition ID is a hardcoded value:
+    // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor
+    roleDefinitionId: '${subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')}'
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+  dependsOn: [
+    userAssignedIdentity
+  ]
+}
 
 resource keyvault 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: keyvaultName
@@ -102,6 +129,35 @@ module spacestation 'modules/linuxVirtualMachine.bicep' = {
     sshPublicKey: generateSshKeyScript.properties.outputs.keyinfo.publicKey
     virtualMachineName: spacestationVirtualMachineName
   }
+}
+
+resource removeSshKeyGenResultScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  name: removeSshKeyGenResultScriptName
+  location: resourceGroup().location
+  kind: 'AzureCLI'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity.id}': {}
+    }
+  }
+  properties: {
+    azCliVersion: '2.25.0'
+    cleanupPreference: 'OnSuccess'
+    retentionInterval: 'P1D' // retain script for 1 day
+    scriptContent: removeSshKeyGenScriptWithGroupNameAndScriptName
+    timeout: 'PT30M' // timeout after 30 minutes
+  }
+  dependsOn: [ // make sure to run this last
+    userAssignedIdentity
+    roleAssignment
+    keyvault
+    generateSshKeyScript
+    publicKeySecret
+    privateKeySecret
+    groundstation
+    spacestation
+  ]
 }
 
 //////////
