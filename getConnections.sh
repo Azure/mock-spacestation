@@ -88,15 +88,6 @@ az keyvault secret show \
 # set the perms on the private key
 info_log "Setting permissions on $privateKeySecretName to allow SSH"
 chmod 600 "$privateKeyFileName"
-
-# delete the SSH keygen script now that we have the private key
-info_log "Cleaning up SSH key generation script $generateSshKeyScriptName from $resourceGroupName"
-az deployment-scripts delete \
-  --resource-group "$resourceGroupName" \
-  --name "$generateSshKeyScriptName" \
-  --yes \
-  --only-show-errors \
-  --output "none"
   
 # echo out the SSH command
 info_log "Success! Private key written to ./$privateKeyFileName. Run these commands to SSH into your machines"
