@@ -164,7 +164,6 @@ resource removeSshKeyGenResultScript 'Microsoft.Resources/deploymentScripts@2020
 // OUTPUT
 //////////
 
-output generateSshKeyScriptName string = generateSshKeyScriptName
 output groundstationAdminUsername string = adminUsername
 output groundstationHostName string = groundstation.outputs.hostName
 output keyvaultName string = keyvault.name

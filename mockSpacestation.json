@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "12458410653924057206"
+      "templateHash": "2292944871228893637"
     }
   },
   "parameters": {
@@ -807,10 +807,6 @@
     }
   ],
   "outputs": {
-    "generateSshKeyScriptName": {
-      "type": "string",
-      "value": "[variables('generateSshKeyScriptName')]"
-    },
     "groundstationAdminUsername": {
       "type": "string",
       "value": "[variables('adminUsername')]"
