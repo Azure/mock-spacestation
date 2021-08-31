@@ -80,7 +80,9 @@ If you're comfortable with the command line, the Azure CLI provides the `deploym
       --name $deploymentName \
       --template-file ./mockSpacestation.json
     ```
+
     Note: Azure Portal deployment supports overriding the default Groundstation and Spacestation location(s) via the UI. When using the CLI, you can override the default location(s) using a `--parameters` argument to override the default `groundstationLocation` and/or `spacestationLocation` parameter(s). For example:
+
     ```bash
     groundstationLocation="usgovvirginia"
     spacestationLocation="usgovarizona"
@@ -90,7 +92,7 @@ If you're comfortable with the command line, the Azure CLI provides the `deploym
       --name $deploymentName \
       --parameters groundstationLocation=$groundstationLocation \
       --parameters spacestationLocation=$spacestationLocation \
-      --template-file ./mockSpacestation.json    
+      --template-file ./mockSpacestation.json
     ```
 
 5. Once that's complete move on to [Connect to the VMs](#Connect-to-the-VMs)
