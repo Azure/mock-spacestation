@@ -1,0 +1,26 @@
+# Dockerfile
+ARG DOCKER_BASE_IMAGE=ubuntu:latest
+FROM $DOCKER_BASE_IMAGE
+EXPOSE 22
+ARG USER=azureuser
+ARG PRIV_KEY
+ARG PUB_KEY
+
+RUN apt update && apt install  openssh-server sudo iproute2 rsync -y
+RUN adduser -u 5678 --disabled-password --gecos "" ${USER}
+
+RUN mkdir -p /home/${USER}/.ssh  && \
+    mkdir -p /home/${USER}/groundstation  && \
+    echo "$PRIV_KEY" > /home/${USER}/.ssh/id_rsa && \
+    echo "$PUB_KEY" > /home/${USER}/.ssh/id_rsa.pub && \
+    chmod 600 /home/${USER}/.ssh/id_rsa && \
+    chmod 600 /home/${USER}/.ssh/id_rsa.pub && \
+    chmod 1777 /home/${USER}/groundstation && \
+    cat /home/${USER}/.ssh/id_rsa.pub >> /home/${USER}/.ssh/authorized_keys
+
+RUN sed -i'' -e's/^#PermitRootLogin prohibit-password$/PermitRootLogin yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PasswordAuthentication yes$/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PermitEmptyPasswords no$/PermitEmptyPasswords yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && service ssh start
+
+CMD ["/usr/sbin/sshd","-D"]
