@@ -35,6 +35,7 @@ RUN mkdir -p /home/${USER}/.ssh  && \
     chmod 600 /home/${USER}/.ssh/id_rsa && \
     chmod 600 /home/${USER}/.ssh/id_rsa.pub && \
     chmod 1777 /home/${USER}/groundstation && \
+    chmod 1777 /home/${USER}/spacestation && \
     cat /home/${USER}/.ssh/id_rsa.pub >> /home/${USER}/.ssh/authorized_keys
 
 # Tweak the SSH config so we can run it
