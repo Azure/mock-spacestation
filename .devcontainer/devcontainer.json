@@ -28,6 +28,7 @@
 		"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
 		"source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
 		"source=${env:HOME}${env:USERPROFILE}/.mock-spacestation/groundstation,target=${containerWorkspaceFolder}/groundstation,type=bind",
+		"source=${env:HOME}${env:USERPROFILE}/.mock-spacestation/spacestation,target=${containerWorkspaceFolder}/spacestation,type=bind",
 		"source=${env:HOME}${env:USERPROFILE}/.mock-spacestation/logs,target=${containerWorkspaceFolder}/logs,type=bind"
 	],
 	"remoteUser": "vscode",
@@ -38,5 +39,6 @@
 		"STATION_SSH_KEY": "/home/vscode/.ssh/id_rsa_spaceStation",
 		"GROUND_STATION_DIR": "${containerWorkspaceFolder}/groundstation",
 		"LOG_DIR": "${containerWorkspaceFolder}/logs",
-	}
+		"SPACE_STATION_DIR": "${containerWorkspaceFolder}/spacestation",
+	}		
 }

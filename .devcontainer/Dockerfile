@@ -17,7 +17,9 @@ RUN if [ "$INSTALL_AZURE_CLI" = "true" ]; then bash /tmp/library-scripts/azcli-d
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends iputils-ping trickle cron
+    && apt-get -y install --no-install-recommends iputils-ping trickle cron \
+    && apt-get clean -y \ 
+    && rm -rf /var/lib/apt/lists/*
 
 RUN sudo service cron start
 

@@ -1,3 +1,7 @@
+docker save --output C:\Temp\dockertest-img.tar dockertest-img
+docker load --input fedora.tar
+
+
 # mock-spacestation
 
 ## What is mock-spacestation?

@@ -42,24 +42,44 @@ if [[ ! -f "${STATION_SSH_KEY}" ]]; then
 fi
 
 echo "Building '${STATION_CONTAINER_NAME}' image..."
-docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file /tmp/library-scripts/Dockerfile.SpaceStation .
+SPACESTATION_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
+#SPACESTATION_FILE="./.devcontainer/library-scripts/Dockerfile.SpaceStation"
+docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file $SPACESTATION_FILE .
 
 echo "Starting '${STATION_CONTAINER_NAME}' container..."
-docker run -dit  --name $STATION_CONTAINER_NAME --network $SPACE_NETWORK_NAME $STATION_CONTAINER_NAME-img
+docker run -dit --privileged --hostname $STATION_CONTAINER_NAME --name $STATION_CONTAINER_NAME --network $SPACE_NETWORK_NAME $STATION_CONTAINER_NAME-img
 
 if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
     echo "Building spacestation-sync"    
     #Register cron
 
+#Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/tmp/spacestation-sync.sh" << EOF
 #!/bin/bash
-sudo rsync -arvz --bwlimit=250 -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation
-sudo rsync -arvz --bwlimit=250 -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation/* $GROUND_STATION_DIR
+rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation
+rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $STATION_USERNAME@$STATION_CONTAINER_NAME:~/spacestation $SPACE_STATION_DIR/*
 EOF
-
     echo "Done"
 fi
 
+
+if [[ ! -f "/tmp/spacestation-sync-nothrottle.sh" ]]; then
+    echo "Building spacestation-nothrottle"    
+    #Register cron
+
+#Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
+cat > "/tmp/spacestation-sync.sh" << EOF
+#!/bin/bash
+echo "This is used to synchronize without the bandwidth throttle.  It does NOT accurately represent the production experience.  Use with caution - it's cheating"
+docker cp $GROUND_STATION_DIR/* $STATION_CONTAINER_NAME:/home/azureuser/groundstation
+docker cp $SPACE_STATION_DIR/* $STATION_CONTAINER_NAME:/home/azureuser/spacestation
+EOF
+    echo "Done"
+fi
+
+
+
+#Update spacestation-sync with executable rights
 chmod +x /tmp/spacestation-sync.sh
 
 
@@ -69,7 +89,7 @@ if [[ ! -f "/tmp/spaceStationSyncJob" ]]; then
     echo "* * * * * /tmp/spacestation-sync.sh >> $LOG_DIR/spacestation-sync.log 2>&1" >> /tmp/spaceStationSyncJob
     crontab /tmp/spaceStationSyncJob
     sudo service cron start
-    #crontab -l
+    #crontab -l #list cron jobs
     #crontab -r #remove cron jobs
     echo "Done"
 fi
