@@ -56,8 +56,18 @@ if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
 #Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/tmp/spacestation-sync.sh" << EOF
 #!/bin/bash
-rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation
-rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $STATION_USERNAME@$STATION_CONTAINER_NAME:~/spacestation $SPACE_STATION_DIR/*
+touchfile=/tmp/sync-running
+if [ -e $touchfile ]; then 
+    echo "Sync is already running.  No work to do"
+   exit
+else   
+   touch $touchfile
+   echo "Starting Sync"
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation  
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $STATION_USERNAME@$STATION_CONTAINER_NAME:~/spacestation $SPACE_STATION_DIR/*   
+   rm $touchfile
+fi
+
 EOF
     echo "Done"
 fi
@@ -67,12 +77,12 @@ if [[ ! -f "/tmp/spacestation-sync-nothrottle.sh" ]]; then
     echo "Building spacestation-nothrottle"    
     #Register cron
 
-#Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
-cat > "/tmp/spacestation-sync.sh" << EOF
+#Build the cheater sync script to do 2 1-way RSYNC (Push, then pull).  No bandwidth limitations
+cat > "/tmp/spacestation-sync-nothrottle.sh" << EOF
 #!/bin/bash
 echo "This is used to synchronize without the bandwidth throttle.  It does NOT accurately represent the production experience.  Use with caution - it's cheating"
-docker cp $GROUND_STATION_DIR/* $STATION_CONTAINER_NAME:/home/azureuser/groundstation
-docker cp $SPACE_STATION_DIR/* $STATION_CONTAINER_NAME:/home/azureuser/spacestation
+docker cp $GROUND_STATION_DIR/. $STATION_CONTAINER_NAME:/home/azureuser/groundstation/
+docker cp $STATION_CONTAINER_NAME:/home/azureuser/spacestation/. $SPACE_STATION_DIR/
 EOF
     echo "Done"
 fi
@@ -81,12 +91,14 @@ fi
 
 #Update spacestation-sync with executable rights
 chmod +x /tmp/spacestation-sync.sh
+chmod +x /tmp/spacestation-sync-nothrottle.sh
+chmod +x ./ssh-to-spacestation.sh
 
 
 if [[ ! -f "/tmp/spaceStationSyncJob" ]]; then
     echo "Building rsync cron job"    
     #Register cron
-    echo "* * * * * /tmp/spacestation-sync.sh >> $LOG_DIR/spacestation-sync.log 2>&1" >> /tmp/spaceStationSyncJob
+    echo "* * * * * /tmp/spacestation-sync.sh >> $LOG_DIR/spacestation-sync.log 2>&1" > /tmp/spaceStationSyncJob
     crontab /tmp/spaceStationSyncJob
     sudo service cron start
     #crontab -l #list cron jobs
