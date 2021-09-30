@@ -29,8 +29,8 @@ For context, here's a video summary of that experiment executed in August of 202
 1. **Synchronization**
 
     Two directories: 
-    - "Ground Station" (%USERPROFILE%\\.mockspacestation\groundstation) "pushes" from the ground to the space station 
-    - "Space Station" (%USERPROFILE%\\.mockspacestation\spacestation) "pushes" from the space station to the ground
+    - "Ground Station" ($env:USERPROFILE\\.mockspacestation\groundstation) "pushes" from the ground to the space station 
+    - "Space Station" ($env:USERPROFILE\\.mockspacestation\spacestation) "pushes" from the space station to the ground
     
 
 1. **Processing at The Edge and "Bursting Down" to The Cloud**
