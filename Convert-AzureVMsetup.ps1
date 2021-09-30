@@ -12,6 +12,8 @@ $dockerFileSpaceStationScriptContents = (Get-Content -Path $spaceStationDockerFi
 $setupScriptContents = $setupScriptContents.Replace("||STATION_DOCKER_FILE||", $dockerFileSpaceStationScriptContents);
 $setupScriptContentsBASE64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($setupScriptContents))
 
+
+
 if($setupScriptContentsBASE64.Length -gt $maxLength){
     throw "BareVMSetup.sh length of $($fileScript.Length) exceeds the maximum allowed length of $($maxLength)"
 }

@@ -45,7 +45,7 @@ fi
 
 echo "Building '${STATION_CONTAINER_NAME}' image..."
 #SPACESTATION_FILE="./.devcontainer/library-scripts/Dockerfile.SpaceStation"
-docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file $SPACESTATION_FILE .
+docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file $SPACESTATION_FILE ./.devcontainer/library-scripts/
 
 echo "Starting '${STATION_CONTAINER_NAME}' container..."
 docker run -dit --privileged --hostname $STATION_CONTAINER_NAME --name $STATION_CONTAINER_NAME --network $SPACE_NETWORK_NAME $STATION_CONTAINER_NAME-img

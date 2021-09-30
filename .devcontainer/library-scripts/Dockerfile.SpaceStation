@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sSL https://get.docker.com/ | sh
 
 # Add the docker-in-docker wrapper script
-ADD .devcontainer/library-scripts/docker-in-docker.sh /usr/local/bin/docker-in-docker
+ADD docker-in-docker.sh /usr/local/bin/docker-in-docker
 RUN chmod +x /usr/local/bin/docker-in-docker
 
 # Add our new user and grant them access to Docker commands

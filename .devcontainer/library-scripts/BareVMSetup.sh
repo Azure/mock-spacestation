@@ -12,7 +12,7 @@ USER="azureuser"
 SPACE_NETWORK_NAME="spacedev-vnet-spacestation"
 STATION_SSH_KEY="/home/${USER}/.ssh/id_rsa_spaceStation"
 STATION_CONTAINER_NAME="spacedev-spacestation"
-STATION_DOCKER_FILE="/tmp/library-scripts/Dockerfile.SpaceStation_BareVM"
+STATION_DOCKER_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
 GROUND_STATION_DIR="/home/${USER}/groundstation"
 LOG_DIR="/home/${USER}/logs"
 SPACE_STATION_DIR="/home/${USER}/spacestation"
@@ -102,7 +102,7 @@ fi
 
 
 echo "$(date): Downloading Library Scripts Start" >> $LOGFILE
-curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation_BareVM" -o /tmp/library-scripts/Dockerfile.SpaceStation_BareVM --silent
+curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o $STATION_DOCKER_FILE --silent
 curl "${GITHUB_SRC}/.devcontainer/library-scripts/docker-in-docker.sh" -o /tmp/library-scripts/docker-in-docker.sh --silent
 chmod 1777 /tmp/library-scripts/Dockerfile.SpaceStation_BareVM
 chmod 1777 /tmp/library-scripts/docker-in-docker.sh
@@ -111,7 +111,7 @@ echo "$(date): Downloading Library Scripts Complete" >> $LOGFILE
 
 
 echo "$(date): SpaceStation Container Build Start" >> $LOGFILE
-docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file $STATION_DOCKER_FILE .
+docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file $STATION_DOCKER_FILE /tmp/library-scripts/
 echo "$(date): SpaceStation Container Build Complete" >> $LOGFILE
 
 echo "$(date): SpaceStation Container Start" >> $LOGFILE
