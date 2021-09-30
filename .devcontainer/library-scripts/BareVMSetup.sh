@@ -12,7 +12,7 @@ USER="azureuser"
 SPACE_NETWORK_NAME="spacedev-vnet-spacestation"
 STATION_SSH_KEY="/home/${USER}/.ssh/id_rsa_spaceStation"
 STATION_CONTAINER_NAME="spacedev-spacestation"
-STATION_DOCKER_FILE="/.devcontainer/library-scripts/Dockerfile.SpaceStation"
+STATION_DOCKER_FILE="/tmp/library-scripts/Dockerfile.SpaceStation_BareVM"
 GROUND_STATION_DIR="/home/${USER}/groundstation"
 LOG_DIR="/home/${USER}/logs"
 SPACE_STATION_DIR="/home/${USER}/spacestation"
@@ -59,8 +59,8 @@ mkdir -p ${GROUND_STATION_DIR}
 mkdir -p ${LOG_DIR}
 mkdir -p ${SPACE_STATION_DIR}
 mkdir -p /home/${USER}/.ssh
-mkdir -p .devcontainer/library-scripts
-chmod 1777 .devcontainer/library-scripts
+mkdir -p /tmp/library-scripts
+chmod 1777 /tmp/library-scripts
 
 #Check if we have ssh keys already genned.  If not, create them
 if [[ ! -f "${STATION_SSH_KEY}" ]]; then
@@ -102,8 +102,8 @@ fi
 
 
 echo "$(date): Downloading Library Scripts Start" >> $LOGFILE
-curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o /.devcontainer/library-scripts/Dockerfile.SpaceStation --silent
-curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o /.devcontainer/library-scripts/docker-in-docker.sh --silent
+curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o /tmp/library-scripts/Dockerfile.SpaceStation_BareVM --silent
+curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o /tmp/library-scripts/docker-in-docker.sh --silent
 echo "$(date): Downloading Library Scripts Complete" >> $LOGFILE
 
 
