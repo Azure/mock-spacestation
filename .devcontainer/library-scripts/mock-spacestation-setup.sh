@@ -9,6 +9,8 @@
 # Syntax: ./mock-spacestation-setup.sh
 
 #Check if the private Space Station vnet exists and if not, create it
+SPACESTATION_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
+
 APPNETWORK=$(docker network ls --format '{{.Name}}' | grep "${SPACE_NETWORK_NAME}")
 
 if [ -z "${APPNETWORK}" ]; then
@@ -42,7 +44,6 @@ if [[ ! -f "${STATION_SSH_KEY}" ]]; then
 fi
 
 echo "Building '${STATION_CONTAINER_NAME}' image..."
-SPACESTATION_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
 #SPACESTATION_FILE="./.devcontainer/library-scripts/Dockerfile.SpaceStation"
 docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(cat $STATION_SSH_KEY)" --build-arg PUB_KEY="$(cat $STATION_SSH_KEY.pub)" --file $SPACESTATION_FILE .
 

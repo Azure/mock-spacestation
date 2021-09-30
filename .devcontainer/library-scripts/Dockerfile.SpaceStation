@@ -6,6 +6,7 @@ ARG PUB_KEY
 
 # Install Docker + dependencies and RSync and SSH Server
 RUN apt-get update && apt-get install -y \ 
+  apt-utils \
   apt-transport-https \
   ca-certificates \
   curl \

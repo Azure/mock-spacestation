@@ -1,39 +1,48 @@
+#$executionScript = "curl https://raw.githubusercontent.com/bigtallcampbell/mock-spacestation/main/.devcontainer/library-scripts/BareVMSetup.sh -O | sudo sh BareVMSetup.sh"
+#[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($executionScript))
 
-# [int]$maxLength = 87380;
-# [string]$bicepFile = ".\AzureVM.bicep"
-# $setupFileContents = (Get-Content -path ".\AzureVMsetup.sh");
-# $setupFileContentsBase64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($setupFileContents))
+#$fileScript = [convert]::ToBase64String((Get-Content -Path ".\.devcontainer\library-scripts\BareVMSetup.sh" -Raw -Encoding byte));
 
-# if($setupFileContentsBase64.Length -gt $maxLength){
-#     throw "Conversion to Base64 exceeded max length supported by Azure CLI.  Max Length: $maxLength.  Length of AzureVMsetup.sh: $($setupFileContentsBase64.Length)"
-# }
+[int]$maxLength = 87380;
+[string]$spaceStationDockerFile = ".\.devcontainer\library-scripts\Dockerfile.SpaceStation"
+[string]$setupScript = ".\.devcontainer\library-scripts\BareVMSetup.sh"
 
-# [System.IO.StreamReader]$fileReader = New-Object System.IO.StreamReader($bicepFile);
+$setupScriptContents = (Get-Content -Path $setupScript -Raw)
+$dockerFileSpaceStationScriptContents = (Get-Content -Path $spaceStationDockerFile -Raw)
+$setupScriptContents = $setupScriptContents.Replace("||STATION_DOCKER_FILE||", $dockerFileSpaceStationScriptContents);
+$setupScriptContentsBASE64 = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($setupScriptContents))
 
-# [bool]$isOSProfile = $false;
-# [System.Text.StringBuilder]$newBicepFile = New-Object -TypeName "System.Text.StringBuilder"; 
+if($setupScriptContentsBASE64.Length -gt $maxLength){
+    throw "BareVMSetup.sh length of $($fileScript.Length) exceeds the maximum allowed length of $($maxLength)"
+}
 
-# while ($null -ne ($line =$fileReader.ReadLine())) {
-#     if($isOSProfile -eq $true -and $line.Contains("customData:")){        
-#         $newBicepFile.AppendLine("      customData: '" + $setupFileContentsBase64 + "'")  | Out-Null;
-#     }else{
-#         $newBicepFile.AppendLine($line) | Out-Null
-#     }
-#     if($line.Contains("osProfile")){
-#         $isOSProfile = $true;
-#     }    
-# }
+[string]$bicepFile = ".\AzureVM.bicep"
+[System.IO.StreamReader]$fileReader = New-Object System.IO.StreamReader($bicepFile);
 
-# $fileReader.Close();
-# $fileReader.Dispose();
-# $fileReader = $null;
+[bool]$isOSProfile = $false;
+[System.Text.StringBuilder]$newBicepFile = New-Object -TypeName "System.Text.StringBuilder"; 
 
-# #Set-Content -Path $bicepFile -Value $newBicepFile.ToString();
-# [System.IO.StreamWriter]$fileWriter = New-Object System.IO.StreamWriter($bicepFile);
+while ($null -ne ($line =$fileReader.ReadLine())) {
+    if($isOSProfile -eq $true -and $line.Contains("customData:")){        
+        $newBicepFile.AppendLine("      customData: '" + $setupScriptContentsBASE64 + "'")  | Out-Null;
+    }else{
+        $newBicepFile.AppendLine($line) | Out-Null
+    }
+    if($line.Contains("osProfile")){
+        $isOSProfile = $true;
+    }    
+}
 
-# $fileWriter.Write($newBicepFile.ToString());
-# $fileWriter.Close();
-# $fileWriter.Dispose();
+$fileReader.Close();
+$fileReader.Dispose();
+$fileReader = $null;
+
+#Set-Content -Path $bicepFile -Value $newBicepFile.ToString();
+[System.IO.StreamWriter]$fileWriter = New-Object System.IO.StreamWriter($bicepFile);
+
+$fileWriter.Write($newBicepFile.ToString());
+$fileWriter.Close();
+$fileWriter.Dispose();
 
 
 
