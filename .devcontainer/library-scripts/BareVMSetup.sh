@@ -102,8 +102,10 @@ fi
 
 
 echo "$(date): Downloading Library Scripts Start" >> $LOGFILE
-curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o /tmp/library-scripts/Dockerfile.SpaceStation_BareVM --silent
-curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation" -o /tmp/library-scripts/docker-in-docker.sh --silent
+curl "${GITHUB_SRC}/.devcontainer/library-scripts/Dockerfile.SpaceStation_BareVM" -o /tmp/library-scripts/Dockerfile.SpaceStation_BareVM --silent
+curl "${GITHUB_SRC}/.devcontainer/library-scripts/docker-in-docker.sh" -o /tmp/library-scripts/docker-in-docker.sh --silent
+chmod 1777 /tmp/library-scripts/Dockerfile.SpaceStation_BareVM
+chmod 1777 /tmp/library-scripts/docker-in-docker.sh
 echo "$(date): Downloading Library Scripts Complete" >> $LOGFILE
 
 
