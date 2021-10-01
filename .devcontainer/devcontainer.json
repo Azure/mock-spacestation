@@ -31,10 +31,7 @@
 	"updateContentCommand": "/tmp/library-scripts/mock-spacestation-setup.sh",
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind",
-		"source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
-		"source=${env:HOME}${env:USERPROFILE}/.mock-spacestation/groundstation,target=${containerWorkspaceFolder}/groundstation,type=bind",
-		"source=${env:HOME}${env:USERPROFILE}/.mock-spacestation/spacestation,target=${containerWorkspaceFolder}/spacestation,type=bind",
-		"source=${env:HOME}${env:USERPROFILE}/.mock-spacestation/logs,target=${containerWorkspaceFolder}/logs,type=bind"
+		"source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind"
 	],
 	"remoteUser": "vscode",
 	"remoteEnv": {

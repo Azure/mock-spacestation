@@ -11,6 +11,9 @@
 #Check if the private Space Station vnet exists and if not, create it
 SPACESTATION_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
 
+mkdir -p $GROUND_STATION_DIR
+mkdir -p $SPACE_STATION_DIR
+
 APPNETWORK=$(docker network ls --format '{{.Name}}' | grep "${SPACE_NETWORK_NAME}")
 
 if [ -z "${APPNETWORK}" ]; then
@@ -57,16 +60,15 @@ if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
 #Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/tmp/spacestation-sync.sh" << EOF
 #!/bin/bash
-touchfile=/tmp/sync-running
-if [ -e $touchfile ]; then 
+if [ -e "/tmp/spacestation-sync.running" ]; then 
     echo "Sync is already running.  No work to do"
    exit
 else   
-   touch $touchfile
+   touch "/tmp/spacestation-sync.running"
    echo "Starting Sync"
    rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation  
    rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $STATION_USERNAME@$STATION_CONTAINER_NAME:~/spacestation/* $SPACE_STATION_DIR/  
-   rm $touchfile
+   rm "/tmp/spacestation-sync.running"
 fi
 
 EOF
@@ -94,6 +96,12 @@ fi
 chmod +x /tmp/spacestation-sync.sh
 chmod +x /tmp/spacestation-sync-nothrottle.sh
 chmod +x ./ssh-to-spacestation.sh
+chmod 1777 $GROUND_STATION_DIR
+chmod 1777 $SPACE_STATION_DIR
+chmod 1777 ./logs
+chown vscode ./groundstation
+chown vscode ./spacestation
+chown vscode ./logs
 
 
 if [[ ! -f "/tmp/spaceStationSyncJob" ]]; then
