@@ -39,6 +39,7 @@ For context, here's a video summary of that experiment executed in August of 202
 1. [Update Docker to use WSL](https://docs.microsoft.com/en-us/windows/wsl/tutorials/wsl-containers#:~:text=1%20Download%20Docker%20Desktop%20and%20follow%20the%20installation,simple%20built-in%20Docker%20image%20using%3A%20docker%20run%20hello-world)
 1. Open the template and wait for provisionsing
 1. Follow *Quick Start to Azure* "You are now connected to **GroundStation**!"
+1. `./groundstation` and `./spacestation` are locally mounted to `$env:USERPROFILE\.mockspacestation\` for convenience
 
 
 ## What it simulates   
