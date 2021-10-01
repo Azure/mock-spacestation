@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "5600297376067421655"
+      "templateHash": "6624983706360796042"
     }
   },
   "parameters": {
@@ -28,10 +28,11 @@
       "type": "string",
       "defaultValue": "Standard_D8s_v3",
       "allowedValues": [
-        "Standard_A2",
-        "Standard_A3",
-        "Standard_A5",
-        "Standard_A7",
+        "Standard_B2s",
+        "Standard_B4ms",
+        "Standard_B8ms",
+        "Standard_B16ms",
+        "Standard_B20ms",
         "Standard_D2s_v3",
         "Standard_D4s_v3",
         "Standard_D8s_v3",

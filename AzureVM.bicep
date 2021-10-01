@@ -24,10 +24,11 @@ var location  = resourceGroup().location
 
 // The size of the VM.
 @allowed([
-  'Standard_A2'
-  'Standard_A3'
-  'Standard_A5'
-  'Standard_A7'
+  'Standard_B2s'
+  'Standard_B4ms'
+  'Standard_B8ms'
+  'Standard_B16ms'
+  'Standard_B20ms'
   'Standard_D2s_v3'
   'Standard_D4s_v3'
   'Standard_D8s_v3'
