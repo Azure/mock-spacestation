@@ -13,6 +13,7 @@ SPACESTATION_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
 
 mkdir -p $GROUND_STATION_DIR
 mkdir -p $SPACE_STATION_DIR
+mkdir -p $LOG_DIR
 
 APPNETWORK=$(docker network ls --format '{{.Name}}' | grep "${SPACE_NETWORK_NAME}")
 
@@ -98,10 +99,10 @@ chmod +x /tmp/spacestation-sync-nothrottle.sh
 chmod +x ./ssh-to-spacestation.sh
 chmod 1777 $GROUND_STATION_DIR
 chmod 1777 $SPACE_STATION_DIR
-chmod 1777 ./logs
-sudo chown vscode ./groundstation
-sudo chown vscode ./spacestation
-sudo chown vscode ./logs
+chmod 1777 $LOG_DIR
+sudo chown vscode $GROUND_STATION_DIR
+sudo chown vscode $SPACE_STATION_DIR
+sudo chown vscode $LOG_DIR
 
 
 if [[ ! -f "/tmp/spaceStationSyncJob" ]]; then
