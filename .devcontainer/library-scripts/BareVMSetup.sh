@@ -65,7 +65,7 @@ chmod 1777 /tmp/library-scripts
 #Check if we have ssh keys already genned.  If not, create them
 if [[ ! -f "${STATION_SSH_KEY}" ]]; then
     echo "Generating development SSH keys..."
-    ssh-keygen -t rsa -b 4096 -f $STATION_SSH_KEY  -q -N ""    
+    ssh-keygen -t rsa -b 4096 -f $STATION_SSH_KEY  -q -N ""
     echo "Done"
 fi
 
@@ -119,24 +119,24 @@ docker run -dit --privileged --hostname "mockSpacestation" --name $STATION_CONTA
 echo "$(date): SpaceStation Container Complete" >> $LOGFILE
 
 if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
-    echo "Building spacestation-sync"    
+    echo "Building spacestation-sync"
     #Register cron
 
 #Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/tmp/spacestation-sync.sh" << EOF
 #!/bin/bash
-if [ -e "/tmp/sync-running" ]; then 
+if [ -e "/tmp/sync-running" ]; then
     echo "Sync is already running.  No work to do"
    exit
-else   
+else
    touch "/tmp/sync-running"
-   chmod 1777 "/tmp/sync-running"   
+   chmod 1777 "/tmp/sync-running"
    echo "Starting push from Ground Station to Space Station..."
-   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $USER@172.18.0.2:~/groundstation  
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $USER@172.18.0.2:~/groundstation
    echo ""
    echo ""
    echo "Starting pull from Space Station to Ground Station"
-   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $USER@172.18.0.2:~/spacestation/* $SPACE_STATION_DIR/  
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $USER@172.18.0.2:~/spacestation/* $SPACE_STATION_DIR/
    rm "/tmp/sync-running"
    echo "-------------------------------"
    echo ""
@@ -152,7 +152,7 @@ chmod 1777 /tmp/spacestation-sync.sh
 
 
 if [[ ! -f "/tmp/spacestation-sync-nothrottle.sh" ]]; then
-    echo "Building spacestation-nothrottle"    
+    echo "Building spacestation-nothrottle"
     #Register cron
 
 #Build the cheater sync script to do 2 1-way RSYNC (Push, then pull).  No bandwidth limitations
@@ -175,7 +175,7 @@ chmod 1777 /tmp/spacestation-sync-nothrottle.sh
 
 
 if [[ ! -f "/tmp/spaceStationSyncJob" ]]; then
-    echo "Building rsync cron job"    
+    echo "Building rsync cron job"
     #Register cron
     echo "* * * * * /tmp/spacestation-sync.sh >> $LOG_DIR/spacestation-sync.log 2>&1" > /tmp/spaceStationSyncJob
     crontab /tmp/spaceStationSyncJob
@@ -188,7 +188,7 @@ fi
 
 
 if [[ ! -f "/home/${USER}/ssh-to-spacestation.sh" ]]; then
-    
+
 #Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/home/${USER}/ssh-to-spacestation.sh" << EOF
     trickle -s -d 5 -u 5 -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY $USER@172.18.0.2
