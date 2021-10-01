@@ -16,7 +16,7 @@ STATION_DOCKER_FILE="/tmp/library-scripts/Dockerfile.SpaceStation"
 GROUND_STATION_DIR="/home/${USER}/groundstation"
 LOG_DIR="/home/${USER}/logs"
 SPACE_STATION_DIR="/home/${USER}/spacestation"
-VERSION="0.1"
+VERSION="2.0"
 LOGFILE="/home/${USER}/mockspacestation-provisioning.log"
 GITHUB_SRC="https://raw.githubusercontent.com/bigtallcampbell/mock-spacestation/main"
 
