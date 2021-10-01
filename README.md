@@ -1,7 +1,7 @@
-# Mock-Spacestation
-## What is Mock-Spacestation?
+# Mock Spacestation
+## What is Mock Spacestation?
 
-Mock-Spacestation empowers developers and enthusiasts to create their own space-based applications with similar constraints from projects deployed to the International Space Station (ISS).  Leveraging [Bicep template](https://aka.ms/bicep) or [Dev Containers](https://code.visualstudio.com/docs/remote/create-dev-container), it deploys a mock Groundstation (host virtual machine/container) and a mock Spacestation (a container) with similar network latency, deployment, authentication, and configurations from other ISS projects.  
+Mock-Spacestation empowers developers and enthusiasts to create their own space-based applications with similar constraints from projects deployed to the International Space Station (ISS).  Leveraging [Bicep template](https://aka.ms/bicep) or [Dev Containers](https://code.visualstudio.com/docs/remote/create-dev-container), it deploys a Mock Groundstation (host virtual machine/container) and a Mock Spacestation (a container) with similar network latency, deployment, authentication, and configurations observed from other ISS projects.  
 
 
 This template was leveraged by the Azure Space team during the development of the genomics experiment while preparing for installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.  
@@ -12,19 +12,20 @@ For context, here's a video summary of that experiment executed in August of 202
 
 # Quick Start to Azure
 1. [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fazure%2Fmock-spacestation%2Fmain%2FAzureVM.json)
-1. SSH into new Ground Station VM (check Output from Template for quick copy/paste SSH command)
+1. SSH into new Mock Groundstation VM (check Output from Template for quick copy/paste SSH command)
+    ![SSH Command](docs/images/SSHFromOutput.png)]
     <br> **Note**: The post provisioning process takes ~5 mins to complete.  Once you SSH, you can check the progress by 
     `cat ./mockspacestation-provisioning.log` <br>
-    Looking for *Mock Space Station Configuration (v2.0) Complete*
-1. You are now connected to **GroundStation**! 
+    Looking for *Mock SpaceStation Configuration (v2.0) Complete*    
+1. You are now connected to **Mock Groundstation**! 
     1. `ls .` to see directories <br>
     ![ls .](/docs/images/groundStationLS.png)
-    1. When connected to **GroundStation**:
+    1. When connected to **Mock Groundstation**:
         - Send files to **spacestation** by placing in `./groundstation`    
         - Files sent by **spacestation** are in `./spacestation`
-1. SSH into spacestation by `./ssh-to-spacestation.sh`<br>
+1. SSH into Mock Spacestation by `./ssh-to-spacestation.sh`<br>
     ![ls .](/docs/images/sshFromGroundStation.png) <br>
-    When connected to spacestation:<br>
+    When connected to **Mock Spacestation**:<br>
     - Send files to **groundstation** by placing in `./spacestation`
     - Files sent by **groundstation** are in `./groundstation`
     - See Containers running by `docker images`
@@ -47,16 +48,16 @@ For context, here's a video summary of that experiment executed in August of 202
     The Azure Space team used computing power of the HPE SBC2 on-board the ISS to perform intensive work for their genomics experiment, allowing them to identify and transmit the critical information to Earth through the narrow 2 megabit per second pipe, where it was further processed on a global scale with Azure.
 
 1. **Latency:**
-    ~400ms latency between the mock ground station and the mock space station to simulate the internation hops and routing leveraged by the ISS  
+    ~400ms latency between the Mock Groundstation and Mock Spacestation to simulate the international hops and routing leveraged by the ISS  
 1. **Bandwidth:**
     2Mb/s to match the actual bandwidth cap when communicating with the ISS.  No internet connectivity from the Space Station
 1. **Synchronization:**
     Two directories: 
-    - `./groundstation` is for Ground Station to send files to Space Station 
-    - `./spacestation` is for Space Station to send files to Ground Station<br>
+    - `./groundstation` is for Mock Groundstation to send files to Mock Spacestation 
+    - `./spacestation` is for Mock Spacestation to send files to Mock Groundstation<br>
     Both synchronizations are limited by the above bandwidth and latency constraints.  Synchronization runs every 60 secs.
 1. **Connectivity:**
-    No connectivity between Space Station and Internet.<br>
+    No connectivity between Mock Spacestation and Internet.<br>
     *Note:* Ground-to-ISS connectivity is approximately 2hrs / week.  This is **not** simulated to assist with development, but should be a consideration in the final deployment
 
 ## Develop an app

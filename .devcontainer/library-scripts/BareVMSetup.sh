@@ -4,7 +4,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 #
-# Used on a blank VM Sets up the local environment to emulate connectivity to the Space Station.  This is slipstreamed into the AzureVM.bicep file to be ran when the VM is provisioned
+# Used on a blank VM Sets up the local environment to emulate connectivity to the SpaceStation.  This is slipstreamed into the AzureVM.bicep file to be ran when the VM is provisioned
 # Syntax: ./BareVMSetup.sh
 
 
@@ -20,7 +20,7 @@ VERSION="2.0"
 LOGFILE="/home/${USER}/mockspacestation-provisioning.log"
 GITHUB_SRC="https://raw.githubusercontent.com/azure/mock-spacestation/main"
 
-echo "Starting Mock Space Station Configuration (v $VERSION)" > $LOGFILE
+echo "Starting Mock SpaceStation Configuration (v $VERSION)" > $LOGFILE
 echo "-----------------------------------------------------------" >> $LOGFILE
 echo "$(date): Working Dir: ${PWD}" >> $LOGFILE
 echo "$(date): Installing libraries" >> $LOGFILE
@@ -205,7 +205,7 @@ echo "$(date): Docker configuration End" >> $LOGFILE
 #START: Finalize
 ###################################
 echo "-----------------------------------------------------------" >> $LOGFILE
-echo "$(date): Mock Space Station Configuration (v $VERSION) Complete." >> $LOGFILE
+echo "$(date): Mock SpaceStation Configuration (v $VERSION) Complete." >> $LOGFILE
 
 ###################################
 #END: Finalize

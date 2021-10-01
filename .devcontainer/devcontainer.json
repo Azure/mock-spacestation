@@ -21,7 +21,12 @@
 	"settings": {},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-dotnettools.csharp"
+		"bierner.markdown-preview-github-styles",
+		"davidanson.vscode-markdownlint",
+		"ms-vscode.azurecli",
+		"ms-dotnettools.vscode-dotnet-runtime",
+		"ms-azuretools.vscode-bicep",
+		"timonwong.shellcheck"
 	],
 	"updateContentCommand": "/tmp/library-scripts/mock-spacestation-setup.sh",
 	"mounts": [

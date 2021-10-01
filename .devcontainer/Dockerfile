@@ -9,7 +9,7 @@ ARG INSTALL_AZURE_CLI="false"
 
 # Copy everything from library scripts to new container
 COPY library-scripts/* /tmp/library-scripts/
-RUN apt-get update && /bin/bash /tmp/library-scripts/docker-debian.sh
+RUN chmod 1777 /tmp/library-scripts && apt-get update && /bin/bash /tmp/library-scripts/docker-debian.sh
 #RUN apt-get update && /bin/bash /tmp/library-scripts/docker-in-docker-debian.sh
 RUN if [ "$INSTALL_AZURE_CLI" = "true" ]; then bash /tmp/library-scripts/azcli-debian.sh; fi \
     && apt-get clean -y \ 
