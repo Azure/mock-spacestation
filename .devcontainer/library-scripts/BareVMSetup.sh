@@ -17,7 +17,7 @@ GROUND_STATION_DIR="/home/${USER}/groundstation"
 LOG_DIR="/home/${USER}/logs"
 SPACE_STATION_DIR="/home/${USER}/spacestation"
 VERSION="0.1"
-LOGFILE="/home/${USER}/MockSpaceStation-setup.log"
+LOGFILE="/home/${USER}/mockspacestation-provisioning.log"
 GITHUB_SRC="https://raw.githubusercontent.com/bigtallcampbell/mock-spacestation/main"
 
 echo "Starting Mock Space Station Configuration (v $VERSION)" > $LOGFILE
@@ -115,7 +115,7 @@ docker build -t $STATION_CONTAINER_NAME-img --no-cache --build-arg PRIV_KEY="$(c
 echo "$(date): SpaceStation Container Build Complete" >> $LOGFILE
 
 echo "$(date): SpaceStation Container Start" >> $LOGFILE
-docker run -dit --privileged --hostname $STATION_CONTAINER_NAME --name $STATION_CONTAINER_NAME --network $SPACE_NETWORK_NAME $STATION_CONTAINER_NAME-img
+docker run -dit --privileged --hostname "mockSpacestation" --name $STATION_CONTAINER_NAME --network $SPACE_NETWORK_NAME $STATION_CONTAINER_NAME-img
 echo "$(date): SpaceStation Container Complete" >> $LOGFILE
 
 if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
@@ -125,21 +125,72 @@ if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
 #Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/tmp/spacestation-sync.sh" << EOF
 #!/bin/bash
-touchfile=/tmp/sync-running
-if [ -e $touchfile ]; then 
+if [ -e "$GROUND_STATION_DIR/sync-running" ]; then 
     echo "Sync is already running.  No work to do"
    exit
 else   
-   touch $touchfile
+   touch "$GROUND_STATION_DIR/sync-running"
+   chmod 1777 "$GROUND_STATION_DIR/sync-running"
    echo "Starting Sync"
-   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $STATION_USERNAME@$STATION_CONTAINER_NAME:~/groundstation  
-   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $STATION_USERNAME@$STATION_CONTAINER_NAME:~/spacestation/* $SPACE_STATION_DIR/  
-   rm $touchfile
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $USER@$172.18.0.2:~/groundstation  
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $USER@$172.18.0.2:~/spacestation/* $SPACE_STATION_DIR/  
+   rm "$GROUND_STATION_DIR/sync-running"
 fi
 
 EOF
     echo "Done"
 fi
+
+chmod 1777 /tmp/spacestation-sync.sh
+
+
+
+if [[ ! -f "/tmp/spacestation-sync-nothrottle.sh" ]]; then
+    echo "Building spacestation-nothrottle"    
+    #Register cron
+
+#Build the cheater sync script to do 2 1-way RSYNC (Push, then pull).  No bandwidth limitations
+cat > "/tmp/spacestation-sync-nothrottle.sh" << EOF
+#!/bin/bash
+echo "This is used to synchronize without the bandwidth throttle.  It does NOT accurately represent the production experience.  Use with caution - it's cheating"
+touchfile "$GROUND_STATION_DIR/sync-running"
+echo "Starting push from Ground to Space Station..."
+docker cp $GROUND_STATION_DIR/. $STATION_CONTAINER_NAME:/home/azureuser/groundstation/
+echo "Starting pull from Space Station to Ground..."
+docker cp $STATION_CONTAINER_NAME:/home/azureuser/spacestation/. $SPACE_STATION_DIR/
+rm "$GROUND_STATION_DIR/sync-running"
+echo "Done"
+EOF
+    echo "Done"
+fi
+
+chmod 1777 /tmp/spacestation-sync-nothrottle.sh
+
+
+
+if [[ ! -f "/tmp/spaceStationSyncJob" ]]; then
+    echo "Building rsync cron job"    
+    #Register cron
+    echo "* * * * * /tmp/spacestation-sync.sh >> $LOG_DIR/spacestation-sync.log 2>&1" > /tmp/spaceStationSyncJob
+    crontab /tmp/spaceStationSyncJob
+    sudo service cron start
+    #crontab -l #list cron jobs
+    #crontab -r #remove cron jobs
+    echo "Done"
+fi
+
+
+
+if [[ ! -f "/home/${USER}/ssh-to-spacestation.sh" ]]; then
+    
+#Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
+cat > "/home/${USER}/ssh-to-spacestation.sh" << EOF
+    trickle -s -d 5 -u 5 -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY $USER@172.18.0.2
+EOF
+    echo "Done"
+fi
+
+chmod +x "/home/${USER}/ssh-to-spacestation.sh"
 
 echo "$(date): Docker configuration End" >> $LOGFILE
 
