@@ -4,7 +4,7 @@
 
 mock-spacestation empowers developers and enthusiasts to develop and test their own space-based applications with similar constraints from projects deployed to the International Space Station (ISS).  Leveraging [Bicep template](https://aka.ms/bicep) and/or [Dev Containers](https://code.visualstudio.com/docs/remote/create-dev-container), it deploys consists of a mock Groundstation (a virtual machine) and a mock Spacestation (a container) with similar network latency, deployment, authentication, and configurations from other ISS projects.  
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fmock-spacestation%2Fmain%2FmockSpacestation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbigtallcampbell%2Fmock-spacestation%2Fmain%2FmockSpacestation.json)
 
 This template was leveraged by the Azure Space team during the development of the genomics experiment while preparing for installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.  
 
