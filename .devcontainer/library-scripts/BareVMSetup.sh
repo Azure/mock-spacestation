@@ -132,8 +132,8 @@ else
    touch "$GROUND_STATION_DIR/sync-running"
    chmod 1777 "$GROUND_STATION_DIR/sync-running"
    echo "Starting Sync"
-   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $USER@$172.18.0.2:~/groundstation  
-   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $USER@$172.18.0.2:~/spacestation/* $SPACE_STATION_DIR/  
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $USER@172.18.0.2:~/groundstation  
+   rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $USER@172.18.0.2:~/spacestation/* $SPACE_STATION_DIR/  
    rm "$GROUND_STATION_DIR/sync-running"
 fi
 
