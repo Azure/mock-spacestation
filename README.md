@@ -11,7 +11,7 @@ For context, here's a video summary of that experiment executed in August of 202
 
 
 # Quick Start to Azure
-1. [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbigtallcampbell%2Fmock-spacestation%2Fmain%2FAzureVM.json)
+1. [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fazure%2Fmock-spacestation%2Fmain%2FAzureVM.json)
 1. SSH into new Ground Station VM (check Output from Template for quick copy/paste SSH command)
     <br> **Note**: The post provisioning process takes ~5 mins to complete.  Once you SSH, you can check the progress by 
     `cat ./mockspacestation-provisioning.log` <br>

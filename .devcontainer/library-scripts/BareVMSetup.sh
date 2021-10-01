@@ -18,7 +18,7 @@ LOG_DIR="/home/${USER}/logs"
 SPACE_STATION_DIR="/home/${USER}/spacestation"
 VERSION="2.0"
 LOGFILE="/home/${USER}/mockspacestation-provisioning.log"
-GITHUB_SRC="https://raw.githubusercontent.com/bigtallcampbell/mock-spacestation/main"
+GITHUB_SRC="https://raw.githubusercontent.com/azure/mock-spacestation/main"
 
 echo "Starting Mock Space Station Configuration (v $VERSION)" > $LOGFILE
 echo "-----------------------------------------------------------" >> $LOGFILE
