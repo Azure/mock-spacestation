@@ -125,16 +125,22 @@ if [[ ! -f "/tmp/spacestation-sync.sh" ]]; then
 #Build the sync script to do 2 1-way RSYNC (Push, then pull).  Use trickle to keep bandwidth @ 250KB/s
 cat > "/tmp/spacestation-sync.sh" << EOF
 #!/bin/bash
-if [ -e "$GROUND_STATION_DIR/sync-running" ]; then 
+if [ -e "/tmp/sync-running" ]; then 
     echo "Sync is already running.  No work to do"
    exit
 else   
-   touch "$GROUND_STATION_DIR/sync-running"
-   chmod 1777 "$GROUND_STATION_DIR/sync-running"
-   echo "Starting Sync"
+   touch "/tmp/sync-running"
+   chmod 1777 "/tmp/sync-running"   
+   echo "Starting push from Ground Station to Space Station..."
    rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $GROUND_STATION_DIR/* $USER@172.18.0.2:~/groundstation  
+   echo ""
+   echo ""
+   echo "Starting pull from Space Station to Ground Station"
    rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $STATION_SSH_KEY" --verbose --progress $USER@172.18.0.2:~/spacestation/* $SPACE_STATION_DIR/  
-   rm "$GROUND_STATION_DIR/sync-running"
+   rm "/tmp/sync-running"
+   echo "-------------------------------"
+   echo ""
+   echo ""
 fi
 
 EOF
@@ -153,12 +159,12 @@ if [[ ! -f "/tmp/spacestation-sync-nothrottle.sh" ]]; then
 cat > "/tmp/spacestation-sync-nothrottle.sh" << EOF
 #!/bin/bash
 echo "This is used to synchronize without the bandwidth throttle.  It does NOT accurately represent the production experience.  Use with caution - it's cheating"
-touchfile "$GROUND_STATION_DIR/sync-running"
+touchfile "/tmp/sync-running"
 echo "Starting push from Ground to Space Station..."
 docker cp $GROUND_STATION_DIR/. $STATION_CONTAINER_NAME:/home/azureuser/groundstation/
 echo "Starting pull from Space Station to Ground..."
 docker cp $STATION_CONTAINER_NAME:/home/azureuser/spacestation/. $SPACE_STATION_DIR/
-rm "$GROUND_STATION_DIR/sync-running"
+rm "/tmp/sync-running"
 echo "Done"
 EOF
     echo "Done"
