@@ -43,24 +43,24 @@ For context, here's a video summary of that experiment executed in August of 202
 
 
 ## What it simulates   
-1. **Processing at The Edge and "Bursting Down" to The Cloud**
+1. **Processing at The Edge and "Bursting Down" to The Cloud:**
     The Azure Space team used computing power of the HPE SBC2 on-board the ISS to perform intensive work for their genomics experiment, allowing them to identify and transmit the critical information to Earth through the narrow 2 megabit per second pipe, where it was further processed on a global scale with Azure.
 
-1. **Latency**
+1. **Latency:**
     ~400ms latency between the mock ground station and the mock space station to simulate the internation hops and routing leveraged by the ISS  
-1. **Bandwidth**
+1. **Bandwidth:**
     2Mb/s to match the actual bandwidth cap when communicating with the ISS.  No internet connectivity from the Space Station
-1. **Synchronization**
+1. **Synchronization:**
     Two directories: 
     - `./groundstation` is for Ground Station to send files to Space Station 
     - `./spacestation` is for Space Station to send files to Ground Station<br>
     Both synchronizations are limited by the above bandwidth and latency constraints.  Synchronization runs every 60 secs.
-1. **Connectivity**
+1. **Connectivity:**
     No connectivity between Space Station and Internet.<br>
     *Note:* Ground-to-ISS connectivity is approximately 2hrs / week.  This is **not** simulated to assist with development, but should be a consideration in the final deployment
 
 ## Develop an app
-1. Create your app, or try the [dotnetapp Sample App](https://github.com/dotnet/dotnet-docker/tree/main/samples/dotnetapp):<br>
+1. Create your app, or clone and build the [dotnetapp Sample App](https://github.com/dotnet/dotnet-docker/tree/main/samples/dotnetapp):<br>
     `docker build --pull -t dotnetapp .`
     <br>*Note: we'll assume you used the dotnetapp sample.  Update the image name/tags to match your app*
 1. Save your docker image to the local file store via `docker save --output C:\Temp\dotnetsample-img.tar dotnetsample:latest`
