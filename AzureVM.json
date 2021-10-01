@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "284620254892696303"
+      "templateHash": "5735756603185048867"
     }
   },
   "parameters": {
@@ -241,7 +241,7 @@
     },
     "sshCommand": {
       "type": "string",
-      "value": "[format('ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+      "value": "[format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
     }
   }
 }
