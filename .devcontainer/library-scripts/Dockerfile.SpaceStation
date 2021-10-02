@@ -1,0 +1,52 @@
+FROM ubuntu:latest
+EXPOSE 22
+ARG USER=azureuser
+ARG PRIV_KEY
+ARG PUB_KEY
+
+# Install Docker + dependencies and RSync and SSH Server
+RUN apt-get update && apt-get install -y \
+  apt-utils \
+  apt-transport-https \
+  ca-certificates \
+  curl \
+  lxc \
+  iptables \
+  openssh-server \
+  iproute2 \
+  rsync
+
+# Install Docker
+RUN curl -sSL https://get.docker.com/ | sh
+
+# Add the docker-in-docker wrapper script
+ADD docker-in-docker.sh /usr/local/bin/docker-in-docker
+RUN chmod +x /usr/local/bin/docker-in-docker
+
+# Add our new user and grant them access to Docker commands
+RUN adduser -u 5678 --disabled-password --gecos "" ${USER}
+RUN usermod -aG docker ${USER}
+
+# Write the private and public keys to the new user's environment.  Update permissions on the groundstation directory so the user can read/write to it
+RUN mkdir -p /home/${USER}/.ssh  && \
+    mkdir -p /home/${USER}/groundstation  && \
+    mkdir -p /home/${USER}/spacestation  && \
+    echo "$PRIV_KEY" > /home/${USER}/.ssh/id_rsa && \
+    echo "$PUB_KEY" > /home/${USER}/.ssh/id_rsa.pub && \
+    chmod 600 /home/${USER}/.ssh/id_rsa && \
+    chmod 600 /home/${USER}/.ssh/id_rsa.pub && \
+    chmod 1777 /home/${USER}/groundstation && \
+    chmod 1777 /home/${USER}/spacestation && \
+    cat /home/${USER}/.ssh/id_rsa.pub >> /home/${USER}/.ssh/authorized_keys
+
+# Tweak the SSH config so we can run it
+RUN sed -i'' -e's/^#PermitRootLogin prohibit-password$/PermitRootLogin yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PasswordAuthentication yes$/PasswordAuthentication no/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PermitEmptyPasswords no$/PermitEmptyPasswords yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && service ssh start
+
+# Docker needs this to run in its embedded environment
+VOLUME /var/lib/docker
+
+# Start up the SSH Server Daemon and the docker-in-docker wrapper script
+CMD ["sh", "-c", "/usr/sbin/sshd ; docker-in-docker"]
