@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "12847881458903739904"
+      "templateHash": "13192789492284012316"
     }
   },
   "parameters": {
@@ -82,7 +82,8 @@
     "location": "[resourceGroup().location]",
     "adminUsername": "azureuser",
     "publicIPAddressName": "[format('{0}PublicIP', parameters('vmName'))]",
-    "networkInterfaceName": "[format('{0}NetInt', parameters('vmName'))]",
+    "networkInterfacePublicIPName": "[format('{0}NetInt', parameters('vmName'))]",
+    "networkInterfacePrivateIPName": "[format('{0}NetInt', parameters('vmName'))]",
     "subnetRef": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName')), parameters('subnetName'))]",
     "osDiskType": "Standard_LRS",
     "subnetAddressPrefix": "10.1.0.0/24",
@@ -104,7 +105,7 @@
       "condition": "[parameters('includePublicIP')]",
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-06-01",
-      "name": "[variables('networkInterfaceName')]",
+      "name": "[variables('networkInterfacePublicIPName')]",
       "location": "[variables('location')]",
       "properties": {
         "ipConfigurations": [
@@ -134,7 +135,7 @@
     {
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-06-01",
-      "name": "[variables('networkInterfaceName')]",
+      "name": "[variables('networkInterfacePrivateIPName')]",
       "location": "[variables('location')]",
       "properties": {
         "ipConfigurations": [
@@ -248,7 +249,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[if(parameters('includePublicIP'), resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName')), resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName')))]"
+              "id": "[if(parameters('includePublicIP'), resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePublicIPName')), resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName')))]"
             }
           ]
         },
@@ -261,8 +262,8 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePublicIPName'))]"
       ]
     },
     {

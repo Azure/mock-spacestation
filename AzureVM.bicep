@@ -53,7 +53,8 @@ param networkSecurityGroupName string = 'spacestationNSG'
 
 var adminUsername = 'azureuser'
 var publicIPAddressName = '${vmName}PublicIP'
-var networkInterfaceName = '${vmName}NetInt'
+var networkInterfacePublicIPName = '${vmName}NetInt'
+var networkInterfacePrivateIPName = '${vmName}NetInt'
 var subnetRef = '${vnet.id}/subnets/${subnetName}'
 var osDiskType = 'Standard_LRS'
 var subnetAddressPrefix = '10.1.0.0/24'
@@ -71,7 +72,7 @@ var linuxConfiguration = {
 }
 
 resource nicWithPublicIP 'Microsoft.Network/networkInterfaces@2020-06-01' = if (includePublicIP) {
-  name: networkInterfaceName
+  name: networkInterfacePublicIPName
   location: location
   properties: {
     ipConfigurations: [
@@ -98,7 +99,7 @@ resource nicWithPublicIP 'Microsoft.Network/networkInterfaces@2020-06-01' = if (
 }
 
 resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
-  name: networkInterfaceName
+  name: networkInterfacePrivateIPName
   location: location
   properties: {
     ipConfigurations: [
