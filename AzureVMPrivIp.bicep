@@ -130,6 +130,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
       customData: loadFileAsBase64('./.devcontainer/library-scripts/BareVMSetup.sh')
     }
   }
+  dependsOn:[
+    nicWithPrivateIP
+  ]
 }
 
 resource shutdownComputeVm 'Microsoft.DevTestLab/schedules@2018-09-15' = {
