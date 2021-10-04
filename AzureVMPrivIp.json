@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "11678827043194690190"
+      "templateHash": "10967478201539914220"
     }
   },
   "parameters": {
@@ -28,6 +28,13 @@
       "type": "string",
       "metadata": {
         "description": "SSH key or password for the Virtual Machine. SSH key is recommended."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure Data region to deploy the VM to"
       }
     },
     "vmSize": {
@@ -71,7 +78,6 @@
   "functions": [],
   "variables": {
     "ubuntuOSVersion": "18.04-LTS",
-    "location": "[resourceGroup().location]",
     "adminUsername": "azureuser",
     "networkInterfacePrivateIPName": "[format('{0}PrivNetInt', parameters('vmName'))]",
     "osDiskType": "Standard_LRS",
@@ -92,7 +98,7 @@
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-06-01",
       "name": "[variables('networkInterfacePrivateIPName')]",
-      "location": "[variables('location')]",
+      "location": "[parameters('location')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -114,7 +120,7 @@
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2020-06-01",
       "name": "[parameters('vmName')]",
-      "location": "[variables('location')]",
+      "location": "[parameters('location')]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
@@ -157,7 +163,7 @@
       "type": "Microsoft.DevTestLab/schedules",
       "apiVersion": "2018-09-15",
       "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
-      "location": "[variables('location')]",
+      "location": "[parameters('location')]",
       "properties": {
         "status": "Enabled",
         "taskType": "ComputeVmShutdownTask",

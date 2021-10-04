@@ -18,7 +18,9 @@ param adminPassword string
 var ubuntuOSVersion = '18.04-LTS'
 
 // Location for all resources.
-var location = resourceGroup().location
+//var location = resourceGroup().location
+@description('Azure Data region to deploy the VM to')
+param location string = resourceGroup().location
 
 // The size of the VM.
 @allowed([
