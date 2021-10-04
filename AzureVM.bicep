@@ -12,6 +12,9 @@ param vmName string = 'mockGroundstation'
 ])
 param authenticationType string = 'password'
 
+@description('Include a Public IP Address')
+param includePublicIP bool = true
+
 @description('SSH key or password for the Virtual Machine. SSH key is recommended.')
 param adminPassword string
 
@@ -38,14 +41,15 @@ var location  = resourceGroup().location
 ])
 param vmSize string = 'Standard_D8s_v3'
 
-// Name of the VNET.
-var virtualNetworkName = 'spacestation-vnet'
+@description('The Virtual Network name (new or existing) for the GroundStation VM')
+param virtualNetworkName string = 'spacestation-vnet'
 
-// Name of the subnet in the virtual network.
-var subnetName = 'spacestation-subnet'
+@description('The Virtual Subnet name (new or existing) for the GroundStation VM')
+param subnetName string = 'spacestation-subnet'
 
 // Name of the Network Security Group.
-var networkSecurityGroupName = 'spacestationNSG'
+@description('The Network Security Name (new or existing) for the GroundStation VM')
+param networkSecurityGroupName string = 'spacestationNSG'
 
 var adminUsername = 'azureuser'
 var publicIPAddressName = '${vmName}PublicIP'
@@ -79,15 +83,18 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-06-01' = {
           }
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: publicIP.id
+            id: ((includePublicIP) ? publicIP.id : json('null'))
           }
         }
       }
     ]
     networkSecurityGroup: {
-      id: nsg.id
+      id: resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
     }
   }
+  dependsOn:[
+    nsg
+  ]      
 }
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
@@ -134,7 +141,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
   }
 }
 
-resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
+resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = if(includePublicIP) {
   name: publicIPAddressName
   location: location
   properties: {
