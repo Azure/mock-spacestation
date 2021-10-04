@@ -85,26 +85,8 @@ resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   ]
 }
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
+resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' existing = {
   name: networkSecurityGroupName
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'SSH'
-        properties: {
-          priority: 1000
-          protocol: 'Tcp'
-          access: 'Allow'
-          direction: 'Inbound'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRange: '22'
-        }
-      }
-    ]
-  }
 }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' existing = {
