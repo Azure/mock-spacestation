@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "10290697966463022437"
+      "templateHash": "6853314703316816537"
     }
   },
   "parameters": {
@@ -142,19 +142,7 @@
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2020-06-01",
       "name": "[parameters('virtualNetworkName')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "addressSpace": {},
-        "subnets": [
-          {
-            "name": "[parameters('subnetName')]",
-            "properties": {
-              "privateEndpointNetworkPolicies": "Enabled",
-              "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-          }
-        ]
-      }
+      "location": "[variables('location')]"
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
