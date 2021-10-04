@@ -24,7 +24,7 @@ var dnsLabelPrefix = toLower('${vmName}-${uniqueString(resourceGroup().id)}')
 var ubuntuOSVersion = '18.04-LTS'
 
 // Location for all resources.
-var location  = resourceGroup().location
+var location = resourceGroup().location
 
 // The size of the VM.
 @allowed([
@@ -70,7 +70,7 @@ var linuxConfiguration = {
   }
 }
 
-resource nic 'Microsoft.Network/networkInterfaces@2020-06-01' = {
+resource nicWithPublicIP 'Microsoft.Network/networkInterfaces@2020-06-01' = if (includePublicIP) {
   name: networkInterfaceName
   location: location
   properties: {
@@ -82,9 +82,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-06-01' = {
             id: subnetRef
           }
           privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: (includePublicIP) ? {
+          publicIPAddress: {
             id: publicIP.id
-          } : json('null')
+          }
         }
       }
     ]
@@ -92,9 +92,33 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-06-01' = {
       id: resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
     }
   }
-  dependsOn:[
+  dependsOn: [
     nsg
-  ]      
+  ]
+}
+
+resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
+  name: networkInterfaceName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: subnetRef
+          }
+          privateIPAllocationMethod: 'Dynamic'         
+        }
+      }
+    ]
+    networkSecurityGroup: {
+      id: resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
+    }
+  }
+  dependsOn: [
+    nsg
+  ]
 }
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
@@ -141,7 +165,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
   }
 }
 
-resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = if(includePublicIP) {
+resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = if (includePublicIP) {
   name: publicIPAddressName
   location: location
   properties: {
@@ -182,7 +206,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
     networkProfile: {
       networkInterfaces: [
         {
-          id: nic.id
+          id: (includePublicIP) ? nicWithPublicIP.id : nicWithPrivateIP.id
         }
       ]
     }
@@ -193,7 +217,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
       linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration) // TODO: workaround for https://github.com/Azure/bicep/issues/449
       //This is Base64 of AzureVMsetup.sh.  Auto-genned by pipeline.  Can be genned using Convert-AzureVMsetup.ps1
       customData: loadFileAsBase64('./.devcontainer/library-scripts/BareVMSetup.sh')
-    }        
+    }
   }
 }
 
@@ -207,7 +231,7 @@ resource shutdownComputeVm 'Microsoft.DevTestLab/schedules@2018-09-15' = {
       time: '23:00'
     }
     timeZoneId: 'Eastern Standard time'
-    targetResourceId: vm.id    
+    targetResourceId: vm.id
   }
 }
 
