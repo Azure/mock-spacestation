@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "15825955136028863529"
+      "templateHash": "7219891378413571342"
     }
   },
   "parameters": {
@@ -23,13 +23,6 @@
         "sshPublicKey",
         "password"
       ]
-    },
-    "includePublicIP": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Include a Public IP Address"
-      }
     },
     "adminPassword": {
       "type": "string",
@@ -77,17 +70,10 @@
   },
   "functions": [],
   "variables": {
-    "dnsLabelPrefix": "[toLower(format('{0}-{1}', parameters('vmName'), uniqueString(resourceGroup().id)))]",
     "ubuntuOSVersion": "18.04-LTS",
-    "location": "[resourceGroup().location]",
     "adminUsername": "azureuser",
-    "publicIPAddressName": "[format('{0}PublicIP', parameters('vmName'))]",
-    "networkInterfacePublicIPName": "[format('{0}PubNetInt', parameters('vmName'))]",
     "networkInterfacePrivateIPName": "[format('{0}PrivNetInt', parameters('vmName'))]",
-    "subnetRef": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName')), parameters('subnetName'))]",
     "osDiskType": "Standard_LRS",
-    "subnetAddressPrefix": "10.1.0.0/24",
-    "addressPrefix": "10.1.0.0/16",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -102,48 +88,17 @@
   },
   "resources": [
     {
-      "condition": "[parameters('includePublicIP')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2020-06-01",
-      "name": "[variables('networkInterfacePublicIPName')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              },
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
-              }
-            }
-          }
-        ],
-        "networkSecurityGroup": {
-          "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
-      ]
-    },
-    {
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-06-01",
       "name": "[variables('networkInterfacePrivateIPName')]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
               "subnet": {
-                "id": "[variables('subnetRef')]"
+                "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName')), parameters('subnetName'))]"
               },
               "privateIPAllocationMethod": "Dynamic"
             }
@@ -152,81 +107,13 @@
         "networkSecurityGroup": {
           "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2020-06-01",
-      "name": "[parameters('networkSecurityGroupName')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "SSH",
-            "properties": {
-              "priority": 1000,
-              "protocol": "Tcp",
-              "access": "Allow",
-              "direction": "Inbound",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2020-06-01",
-      "name": "[parameters('virtualNetworkName')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[parameters('subnetName')]",
-            "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefix')]",
-              "privateEndpointNetworkPolicies": "Enabled",
-              "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "condition": "[parameters('includePublicIP')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2020-06-01",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[variables('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "publicIPAddressVersion": "IPv4",
-        "dnsSettings": {
-          "domainNameLabel": "[variables('dnsLabelPrefix')]"
-        },
-        "idleTimeoutInMinutes": 4
-      },
-      "sku": {
-        "name": "Basic"
       }
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2020-06-01",
       "name": "[parameters('vmName')]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
@@ -249,7 +136,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[if(parameters('includePublicIP'), resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePublicIPName')), resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName')))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))]"
             }
           ]
         },
@@ -262,15 +149,14 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePublicIPName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))]"
       ]
     },
     {
       "type": "Microsoft.DevTestLab/schedules",
       "apiVersion": "2018-09-15",
       "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
-      "location": "[variables('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "status": "Enabled",
         "taskType": "ComputeVmShutdownTask",
@@ -292,11 +178,7 @@
     },
     "hostname": {
       "type": "string",
-      "value": "[if(parameters('includePublicIP'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn, parameters('vmName'))]"
-    },
-    "sshCommand": {
-      "type": "string",
-      "value": "[if(parameters('includePublicIP'), format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn), format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))).ipConfigurations[0].properties.privateIPAddress))]"
+      "value": "[parameters('vmName')]"
     }
   }
 }
