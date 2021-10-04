@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "2854964529518243872"
+      "templateHash": "13029705528685262989"
     }
   },
   "parameters": {
@@ -30,7 +30,7 @@
         "description": "SSH key or password for the Virtual Machine. SSH key is recommended."
       }
     },
-    "location": {
+    "targetRegion": {
       "type": "string",
       "defaultValue": "East US 2",
       "metadata": {
@@ -168,7 +168,7 @@
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-06-01",
       "name": "[variables('networkInterfacePrivateIPName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('targetRegion')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -190,7 +190,7 @@
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2020-06-01",
       "name": "[parameters('vmName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('targetRegion')]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
@@ -233,7 +233,7 @@
       "type": "Microsoft.DevTestLab/schedules",
       "apiVersion": "2018-09-15",
       "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('targetRegion')]",
       "properties": {
         "status": "Enabled",
         "taskType": "ComputeVmShutdownTask",

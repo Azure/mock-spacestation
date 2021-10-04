@@ -90,7 +90,7 @@ var ubuntuOSVersion = '18.04-LTS'
   'Brazil Southeast'  
 ])
 @description('Azure Data region to deploy the VM to')
-param location string = 'East US 2'
+param targetRegion string = 'East US 2'
 
 // The size of the VM.
 @allowed([
@@ -135,7 +135,7 @@ var linuxConfiguration = {
 
 resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   name: networkInterfacePrivateIPName
-  location: location
+  location: targetRegion
   properties: {
     ipConfigurations: [
       {
@@ -167,7 +167,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' existing = {
 
 resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   name: vmName
-  location: location
+  location: targetRegion
   properties: {
     hardwareProfile: {
       vmSize: vmSize
@@ -209,7 +209,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
 
 resource shutdownComputeVm 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   name: 'shutdown-computevm-${vmName}'
-  location: location
+  location: targetRegion
   properties: {
     status: 'Enabled'
     taskType: 'ComputeVmShutdownTask'
