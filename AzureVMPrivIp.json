@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "11777084132788040568"
+      "templateHash": "7219891378413571342"
     }
   },
   "parameters": {
@@ -71,7 +71,6 @@
   "functions": [],
   "variables": {
     "ubuntuOSVersion": "18.04-LTS",
-    "targetRegion": "[resourceGroup().location]",
     "adminUsername": "azureuser",
     "networkInterfacePrivateIPName": "[format('{0}PrivNetInt', parameters('vmName'))]",
     "osDiskType": "Standard_LRS",
@@ -92,7 +91,7 @@
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2020-06-01",
       "name": "[variables('networkInterfacePrivateIPName')]",
-      "location": "[variables('targetRegion')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "ipConfigurations": [
           {
@@ -114,7 +113,7 @@
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2020-06-01",
       "name": "[parameters('vmName')]",
-      "location": "[variables('targetRegion')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
@@ -157,7 +156,7 @@
       "type": "Microsoft.DevTestLab/schedules",
       "apiVersion": "2018-09-15",
       "name": "[format('shutdown-computevm-{0}', parameters('vmName'))]",
-      "location": "[variables('targetRegion')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "status": "Enabled",
         "taskType": "ComputeVmShutdownTask",

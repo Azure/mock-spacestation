@@ -16,9 +16,6 @@ param adminPassword string
 
 var ubuntuOSVersion = '18.04-LTS'
 
-// Location for all resources.
-var targetRegion = resourceGroup().location
-
 // The size of the VM.
 @allowed([
   'Standard_B2s'
@@ -62,7 +59,7 @@ var linuxConfiguration = {
 
 resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   name: networkInterfacePrivateIPName
-  location: targetRegion
+  location: resourceGroup().location
   properties: {
     ipConfigurations: [
       {
@@ -95,7 +92,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' existing = {
 
 resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   name: vmName
-  location: targetRegion
+  location: resourceGroup().location
   properties: {
     hardwareProfile: {
       vmSize: vmSize
@@ -137,7 +134,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
 
 resource shutdownComputeVm 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   name: 'shutdown-computevm-${vmName}'
-  location: targetRegion
+  location: resourceGroup().location
   properties: {
     status: 'Enabled'
     taskType: 'ComputeVmShutdownTask'
