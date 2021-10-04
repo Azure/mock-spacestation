@@ -100,6 +100,10 @@ All you'll need is an Azure Subscription to get started.
 
 1. [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
 
+    Once the virtual machine has been deployed and the Mock Spacestation Configuration is compelte, get started synchronizing files and ensuring you can connect to the Mock Spacestation following the steps at:
+
+    [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
+
 ### Deploy to your local hardware
 
 #### Local Prerequisites
@@ -151,6 +155,10 @@ Once you have the prerequisites installed follow these steps to get started:
     Or, use the keyboard shortcut `` ctrl + ` ``
 
 1. [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
+
+    Once the containers have been built, get started synchronizing files and ensuring you can connect to the Mock Spacestation following the steps at:
+
+    [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
 
 1. Get started [writing your app](#Writing-your-app)
 
