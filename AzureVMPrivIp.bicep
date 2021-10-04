@@ -5,7 +5,6 @@
 param vmName string = 'mockGroundstation'
 
 // Type of authentication to use on the Virtual Machine. SSH key is recommended.
-
 @allowed([
   'sshPublicKey'
   'password'
@@ -18,79 +17,7 @@ param adminPassword string
 var ubuntuOSVersion = '18.04-LTS'
 
 // Location for all resources.
-//var location = resourceGroup().location
-@allowed([
-  'East US'
-  'East US 2'
-  'South Central US'
-  'West US 2'
-  'West US 3'
-  'Australia East'
-  'Southeast Asia'
-  'North Europe'
-  'Sweden Central'
-  'UK South'
-  'West Europe'
-  'Central US'
-  'North Central US'
-  'West US'
-  'South Africa North'
-  'Central India'
-  'East Asia'
-  'Japan East'
-  'Jio India West'
-  'Korea Central'
-  'Canada Central'
-  'France Central'
-  'Germany West Central'
-  'Norway East'
-  'Switzerland North'
-  'UAE North'
-  'Brazil South'
-  'Central US (Stage)'
-  'East US (Stage)'
-  'East US 2 (Stage)'
-  'North Central US (Stage)'
-  'South Central US (Stage)'
-  'West US (Stage)'
-  'West US 2 (Stage)'
-  'Asia'
-  'Asia Pacific'
-  'Australia'
-  'Brazil'
-  'Canada'
-  'Europe'
-  'Global'
-  'India'
-  'Japan'
-  'United Kingdom'
-  'United States'
-  'East Asia (Stage)'
-  'Southeast Asia (Stage)'
-  'Central US EUAP'
-  'East US 2 EUAP'
-  'West Central US'
-  'South Africa West'
-  'Australia Central'
-  'Australia Central 2'
-  'Australia Southeast'
-  'Japan West'
-  'Jio India Central'
-  'Korea South'
-  'South India'
-  'West India'
-  'Canada East'
-  'France South'
-  'Germany North'
-  'Norway West'
-  'Sweden South'
-  'Switzerland West'
-  'UK West'
-  'UAE Central'
-  'Brazil Southeast'  
-])
-@description('Azure Data region to deploy the VM to')
-param targetRegion string = 'East US 2'
+var targetRegion = resourceGroup().location
 
 // The size of the VM.
 @allowed([
@@ -154,6 +81,7 @@ resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   }
   dependsOn: [
     nsg
+    vnet
   ]
 }
 
