@@ -12,14 +12,8 @@ param vmName string = 'mockGroundstation'
 ])
 param authenticationType string = 'password'
 
-@description('Include a Public IP Address')
-param includePublicIP bool = true
-
 @description('SSH key or password for the Virtual Machine. SSH key is recommended.')
 param adminPassword string
-
-// Unique DNS Name for the Public IP used to access the Virtual Machine.
-var dnsLabelPrefix = toLower('${vmName}-${uniqueString(resourceGroup().id)}')
 
 var ubuntuOSVersion = '18.04-LTS'
 
@@ -52,10 +46,7 @@ param subnetName string = 'spacestation-subnet'
 param networkSecurityGroupName string = 'spacestationNSG'
 
 var adminUsername = 'azureuser'
-var publicIPAddressName = '${vmName}PublicIP'
-var networkInterfacePublicIPName = '${vmName}PubNetInt'
 var networkInterfacePrivateIPName = '${vmName}PrivNetInt'
-var subnetRef = '${vnet.id}/subnets/${subnetName}'
 var osDiskType = 'Standard_LRS'
 
 var linuxConfiguration = {
@@ -70,33 +61,6 @@ var linuxConfiguration = {
   }
 }
 
-resource nicWithPublicIP 'Microsoft.Network/networkInterfaces@2020-06-01' = if (includePublicIP) {
-  name: networkInterfacePublicIPName
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: subnetRef
-          }
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: publicIP.id
-          }
-        }
-      }
-    ]
-    networkSecurityGroup: {
-      id: resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
-    }
-  }
-  dependsOn: [
-    nsg
-  ]
-}
-
 resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   name: networkInterfacePrivateIPName
   location: location
@@ -106,7 +70,7 @@ resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: subnetRef
+            id: '${vnet.id}/subnets/${subnetName}'
           }
           privateIPAllocationMethod: 'Dynamic'         
         }
@@ -147,22 +111,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' existing = {
   name: virtualNetworkName  
 }
 
-resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = if (includePublicIP) {
-  name: publicIPAddressName
-  location: location
-  properties: {
-    publicIPAllocationMethod: 'Dynamic'
-    publicIPAddressVersion: 'IPv4'
-    dnsSettings: {
-      domainNameLabel: dnsLabelPrefix
-    }
-    idleTimeoutInMinutes: 4
-  }
-  sku: {
-    name: 'Basic'
-  }
-}
-
 resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   name: vmName
   location: location
@@ -188,7 +136,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
     networkProfile: {
       networkInterfaces: [
         {
-          id: (includePublicIP) ? nicWithPublicIP.id : nicWithPrivateIP.id
+          id: nicWithPrivateIP.id
         }
       ]
     }
@@ -197,7 +145,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
       adminUsername: adminUsername
       adminPassword: adminPassword
       linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration) // TODO: workaround for https://github.com/Azure/bicep/issues/449
-      //This is Base64 of AzureVMsetup.sh.  Auto-genned by pipeline.  Can be genned using Convert-AzureVMsetup.ps1
       customData: loadFileAsBase64('./.devcontainer/library-scripts/BareVMSetup.sh')
     }
   }
@@ -218,5 +165,4 @@ resource shutdownComputeVm 'Microsoft.DevTestLab/schedules@2018-09-15' = {
 }
 
 output administratorUsername string = adminUsername
-output hostname string = includePublicIP ? publicIP.properties.dnsSettings.fqdn : vmName
-output sshCommand string = includePublicIP ? 'ssh ${adminUsername}@${publicIP.properties.dnsSettings.fqdn}' : 'ssh ${adminUsername}@${nicWithPrivateIP.properties.ipConfigurations[0].properties.privateIPAddress}'
+output hostname string = vmName
