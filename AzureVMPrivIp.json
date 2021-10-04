@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "47798967971026559"
+      "templateHash": "10290697966463022437"
     }
   },
   "parameters": {
@@ -76,8 +76,6 @@
     "networkInterfacePrivateIPName": "[format('{0}PrivNetInt', parameters('vmName'))]",
     "subnetRef": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName')), parameters('subnetName'))]",
     "osDiskType": "Standard_LRS",
-    "subnetAddressPrefix": "10.1.0.0/24",
-    "addressPrefix": "10.1.0.0/16",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -146,16 +144,11 @@
       "name": "[parameters('virtualNetworkName')]",
       "location": "[variables('location')]",
       "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
-        },
+        "addressSpace": {},
         "subnets": [
           {
             "name": "[parameters('subnetName')]",
             "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefix')]",
               "privateEndpointNetworkPolicies": "Enabled",
               "privateLinkServiceNetworkPolicies": "Enabled"
             }

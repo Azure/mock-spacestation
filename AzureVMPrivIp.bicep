@@ -49,8 +49,7 @@ var adminUsername = 'azureuser'
 var networkInterfacePrivateIPName = '${vmName}PrivNetInt'
 var subnetRef = '${vnet.id}/subnets/${subnetName}'
 var osDiskType = 'Standard_LRS'
-var subnetAddressPrefix = '10.1.0.0/24'
-var addressPrefix = '10.1.0.0/16'
+
 var linuxConfiguration = {
   disablePasswordAuthentication: true
   ssh: {
@@ -114,15 +113,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
   location: location
   properties: {
     addressSpace: {
-      addressPrefixes: [
-        addressPrefix
-      ]
+      
     }
     subnets: [
       {
         name: subnetName
-        properties: {
-          addressPrefix: subnetAddressPrefix
+        properties: {         
           privateEndpointNetworkPolicies: 'Enabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
@@ -164,8 +160,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
       computerName: vmName
       adminUsername: adminUsername
       adminPassword: adminPassword
-      linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration) // TODO: workaround for https://github.com/Azure/bicep/issues/449
-      //This is Base64 of AzureVMsetup.sh.  Auto-genned by pipeline.  Can be genned using Convert-AzureVMsetup.ps1
+      linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration) // TODO: workaround for https://github.com/Azure/bicep/issues/449      
       customData: loadFileAsBase64('./.devcontainer/library-scripts/BareVMSetup.sh')
     }
   }
