@@ -238,4 +238,4 @@ resource shutdownComputeVm 'Microsoft.DevTestLab/schedules@2018-09-15' = {
 
 output administratorUsername string = adminUsername
 output hostname string = includePublicIP ? publicIP.properties.dnsSettings.fqdn : vmName
-output sshCommand string = includePublicIP ? 'ssh ${adminUsername}@${publicIP.properties.dnsSettings.fqdn}' : 'ssh ${adminUsername}@${nicWithPrivateIP.properties.dnsSettings.internalFqdn}'
+output sshCommand string = includePublicIP ? 'ssh ${adminUsername}@${publicIP.properties.dnsSettings.fqdn}' : 'ssh ${adminUsername}@${nicWithPrivateIP.properties.ipConfigurations[0].properties.privateIPAddress}'

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "9831470711528602263"
+      "templateHash": "15825955136028863529"
     }
   },
   "parameters": {
@@ -296,7 +296,7 @@
     },
     "sshCommand": {
       "type": "string",
-      "value": "[if(parameters('includePublicIP'), format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn), format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))).dnsSettings.internalFqdn))]"
+      "value": "[if(parameters('includePublicIP'), format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn), format('ssh {0}@{1}', variables('adminUsername'), reference(resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfacePrivateIPName'))).ipConfigurations[0].properties.privateIPAddress))]"
     }
   }
 }
