@@ -82,9 +82,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2020-06-01' = {
             id: subnetRef
           }
           privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: ((includePublicIP) ? publicIP.id : json('null'))
-          }
+          publicIPAddress: (includePublicIP) ? {
+            id: publicIP.id
+          } : json('null')
         }
       }
     ]
