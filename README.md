@@ -4,9 +4,10 @@
 
 mock-spacestation empowers developers and enthusiasts to create their own space-based applications with similar constraints to projects deployed to the International Space Station (ISS) by deploying a Mock Groundstation and Mock Spacestation to Azure via a [Bicep template](https://aka.ms/bicep) or on your local hardware with [Visual Studio Code Remote Dev Containers](https://code.visualstudio.com/docs/remote/create-dev-container).
 
-The solution in this repository were used by the Azure Space team during the development of their genomics experiment so that they could understand the challenges they'd face in network latency, container deployment, authentication, and machine configuration, while awaiting installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.
+The solutions in this repository were used by the Azure Space team during the development of their genomics experiment so that they could understand the challenges they'd face in network latency, container deployment, authentication, and machine configuration, while awaiting installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.
 
-For context, here's a video summary of that experiment executed in August of 2021:
+For context, here's a video summary of that experiment conducted in August of 2021:
+
 [![Video overview of the Azure and HPE Genomics experiment on the International Space Station](http://img.youtube.com/vi/wZfIUkcgVxI/0.jpg)](https://www.youtube.com/watch?v=wZfIUkcgVxI "Genomics testing on the ISS with HPE Spaceborne Computer-2 and Azure")
 
 ## What it simulates
@@ -17,15 +18,15 @@ For context, here's a video summary of that experiment executed in August of 202
 
 1. **Latency:**
 
-    There's tremendous latency communicating to an object in orbit. mock-spacestation simulates a ~400ms latency between the Mock Groundstation and Mock Spacestation to simulate the international hops and routing leveraged by the ISS
+    There's tremendous latency communicating to an object in orbit and beyond. mock-spacestation simulates a ~400ms latency between the Mock Groundstation and Mock Spacestation to simulate the international hops and routing leveraged by the ISS
 
 1. **Bandwidth:**
 
-    2Mb/s to match the actual bandwidth cap when communicating with the ISS.
+    2 mega*bits* per second to match the actual bandwidth cap when communicating with the ISS.
 
 1. **Synchronization:**
 
-    The solution in this repository synchornizes two directories every 60 seconds and are limited by configurable bandwidth and latency constraints:
+    The solution in this repository synchornizes two directories every 60 seconds and are rate-limited by configurable bandwidth and latency constraints:
 
     - `./groundstation` is a directory for Mock Groundstation to send files to Mock Spacestation
     - `./spacestation` is a directory for Mock Spacestation to send files to Mock Groundstation
@@ -38,7 +39,7 @@ For context, here's a video summary of that experiment executed in August of 202
 
 ## Deploy a Mock Groundstation
 
-In this repository there are two ways to experience building an application with all the latency and disconnectedness of space:
+There are two ways in this repository to experience building an application with all the latency and disconnectedness of space:
 
 1. [A virtual machine hosted in Azure](#Deploy-to-Azure)
 1. [Using Docker containers on your local machine in Visual Studio Code](#Deploy-to-your-local-hardware)
@@ -57,7 +58,7 @@ All you'll need is an Azure Subscription to get started.
 
 1. Accept the prompt with `yes` to add the virtual machine to your known hosts:
 
-    ```bash
+    ```plaintext
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     ```
 
@@ -255,13 +256,13 @@ In the following steps we'll show you how you can run a dotnet application on th
 
 1. Clone and build the [dotnetapp sample](https://github.com/dotnet/dotnet-docker/tree/main/samples/dotnetapp):
 
-    ```powershell
+    ```plaintext
     docker build --pull -t dotnetapp .
     ```
 
 1. Save your docker image to a local file store:
 
-    ```powershell
+    ```plaintext
     docker save --output ./dotnetsample-img.tar dotnetsample:latest
     ```
 
