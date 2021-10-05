@@ -1,32 +1,23 @@
 // az deployment group create --template-file AzureVM.bicep --resource-group "test_group"
 // az bicep build --file .\AzureVM.bicep --outfile .\AzureVM.json
 
-@description('The name of the new virtual machine')
+@description('The name of the Virtual Machine')
 param vmName string = 'mockGroundstation'
 
-// Type of authentication to use on the Virtual Machine. SSH key is recommended.
-
+@description('The authentication type for the Virtual Machine (SSH Key is recommended)')
 @allowed([
   'sshPublicKey'
   'password'
 ])
 param authenticationType string = 'password'
 
-@description('Include a Public IP Address')
+@description('SSH key or password for the Virtual Machine (SSH key is recommended)')
+param adminPasswordOrKey string
+
+@description('Create a Public IP Address for the Virtual Machine?')
 param includePublicIP bool = true
 
-@description('SSH key or password for the Virtual Machine. SSH key is recommended.')
-param adminPassword string
-
-// Unique DNS Name for the Public IP used to access the Virtual Machine.
-var dnsLabelPrefix = toLower('${vmName}-${uniqueString(resourceGroup().id)}')
-
-var ubuntuOSVersion = '18.04-LTS'
-
-// Location for all resources.
-var location = resourceGroup().location
-
-// The size of the VM.
+@description('The size of the Virtual Machine')
 @allowed([
   'Standard_B2s'
   'Standard_B4ms'
@@ -41,88 +32,87 @@ var location = resourceGroup().location
 ])
 param vmSize string = 'Standard_D8s_v3'
 
-@description('The Virtual Network name (new or existing) for the GroundStation VM')
-param virtualNetworkName string = 'spacestation-vnet'
+@description('Reuse an existing virtual network?')
+param useExistingNetwork bool = false
 
-@description('The Virtual Subnet name (new or existing) for the GroundStation VM')
-param subnetName string = 'spacestation-subnet'
+@description('The Virtual Network name for the Virtual Machine (e.g. groundstation-vnet)')
+param virtualNetworkName string
 
-// Name of the Network Security Group.
-@description('The Network Security Name (new or existing) for the GroundStation VM')
-param networkSecurityGroupName string = 'spacestationNSG'
+@description('The Virtual Subnet name for the Virtual Machine (e.g. groundstation-subnet)')
+param subnetName string
+
+@description('The Network Security Name Group (new or existing) for the Virtual Machine (e.g. groundstation-nsg)')
+param networkSecurityGroupName string
+
+var location = resourceGroup().location
 
 var adminUsername = 'azureuser'
+
 var publicIPAddressName = '${vmName}PublicIP'
+
 var networkInterfacePublicIPName = '${vmName}PubNetInt'
+
 var networkInterfacePrivateIPName = '${vmName}PrivNetInt'
-var subnetRef = '${vnet.id}/subnets/${subnetName}'
+
 var osDiskType = 'Standard_LRS'
+
+var virtualNetworkAddressPrefix = '10.1.0.0/16'
+
 var subnetAddressPrefix = '10.1.0.0/24'
-var addressPrefix = '10.1.0.0/16'
+
+var dnsLabelPrefix = toLower('${vmName}-${uniqueString(resourceGroup().id)}')
+
+var ubuntuOSVersion = '18.04-LTS'
+
+// workaround for https://github.com/Azure/bicep/issues/449
 var linuxConfiguration = {
   disablePasswordAuthentication: true
   ssh: {
     publicKeys: [
       {
         path: '/home/${adminUsername}/.ssh/authorized_keys'
-        keyData: adminPassword
+        keyData: adminPasswordOrKey
       }
     ]
   }
 }
 
-resource nicWithPublicIP 'Microsoft.Network/networkInterfaces@2020-06-01' = if (includePublicIP) {
-  name: networkInterfacePublicIPName
+resource existingVirtualNetwork 'Microsoft.Network/virtualNetworks@2020-06-01' existing = if(useExistingNetwork) {
+  name: virtualNetworkName
+}
+
+resource existingSubnet 'Microsoft.Network/virtualNetworks/subnets@2020-06-01' existing = if(useExistingNetwork) {
+  parent: existingVirtualNetwork
+  name: subnetName
+}
+
+resource existingNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2020-06-01' existing = if(useExistingNetwork) {
+  name: networkSecurityGroupName
+}
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2020-06-01' = if(!useExistingNetwork) {
+  name: virtualNetworkName
   location: location
   properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: subnetRef
-          }
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: publicIP.id
-          }
-        }
-      }
-    ]
-    networkSecurityGroup: {
-      id: resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
+    addressSpace: {
+      addressPrefixes: [
+        virtualNetworkAddressPrefix
+      ]
     }
   }
-  dependsOn: [
-    nsg
-  ]
 }
 
-resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
-  name: networkInterfacePrivateIPName
-  location: location
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2020-06-01' = if(!useExistingNetwork) {
+  parent: virtualNetwork
+  name: subnetName
   properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: subnetRef
-          }
-          privateIPAllocationMethod: 'Dynamic'         
-        }
-      }
-    ]
-    networkSecurityGroup: {
-      id: resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
-    }
+    addressPrefix: subnetAddressPrefix
+    privateEndpointNetworkPolicies: 'Enabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
   }
-  dependsOn: [
-    nsg
-  ]
 }
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
+resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2020-06-01' = if(!useExistingNetwork) {
   name: networkSecurityGroupName
   location: location
   properties: {
@@ -144,28 +134,6 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
   }
 }
 
-resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
-  name: virtualNetworkName
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        addressPrefix
-      ]
-    }
-    subnets: [
-      {
-        name: subnetName
-        properties: {
-          addressPrefix: subnetAddressPrefix
-          privateEndpointNetworkPolicies: 'Enabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-    ]
-  }
-}
-
 resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = if (includePublicIP) {
   name: publicIPAddressName
   location: location
@@ -179,6 +147,51 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = if (include
   }
   sku: {
     name: 'Basic'
+  }
+}
+
+resource nicWithPublicIP 'Microsoft.Network/networkInterfaces@2020-06-01' = if (includePublicIP) {
+  name: networkInterfacePublicIPName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: (useExistingNetwork) ? existingSubnet.id : subnet.id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIP.id
+          }
+        }
+      }
+    ]
+    networkSecurityGroup: {
+      id: (useExistingNetwork) ? existingNetworkSecurityGroup.id : networkSecurityGroup.id
+    }
+  }
+}
+
+resource nicWithPrivateIP 'Microsoft.Network/networkInterfaces@2020-06-01' = {
+  name: networkInterfacePrivateIPName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: (useExistingNetwork) ? existingSubnet.id : subnet.id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+    networkSecurityGroup: {
+      id: (useExistingNetwork) ? existingNetworkSecurityGroup.id : networkSecurityGroup.id
+    }
   }
 }
 
@@ -214,9 +227,8 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
-      adminPassword: adminPassword
-      linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration) // TODO: workaround for https://github.com/Azure/bicep/issues/449
-      //This is Base64 of AzureVMsetup.sh.  Auto-genned by pipeline.  Can be genned using Convert-AzureVMsetup.ps1
+      adminPassword: adminPasswordOrKey
+      linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration)
       customData: loadFileAsBase64('./.devcontainer/library-scripts/BareVMSetup.sh')
     }
   }
