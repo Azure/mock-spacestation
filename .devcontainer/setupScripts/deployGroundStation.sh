@@ -99,7 +99,6 @@ writeToProvisioningLog "--------------------------------------------------------
 writeToProvisioningLog "Working Dir: ${PWD}"
 writeToProvisioningLog "Installing libraries"
 writeToProvisioningLog "Deploy Docker in GroundStation (START)"
-writeToProvisioningLog "$(printenv)"
 
 sudo apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && sudo apt-get -y install --no-install-recommends \
@@ -271,6 +270,9 @@ crontab /tmp/sync-to-spacestation-job
 sudo service cron start
 #crontab -l #list cron jobs
 #crontab -r #remove cron jobs
+
+writeToProvisioningLog "-----------------------------------------------------------"
+writeToProvisioningLog "Mock SpaceStation Configuration (v $GROUNDSTATION_VERSION) Complete.  Happy Space Deving!"
 
 # ********************************************************
 # Build SSH and RSYNC Jobs: END
