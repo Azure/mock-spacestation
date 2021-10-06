@@ -32,6 +32,8 @@ bld/
 [Ll]ogs/
 [Gg]roundstation/
 [Ss]pacestation/
+toSpaceStation/
+fromSpaceStation/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

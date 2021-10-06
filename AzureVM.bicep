@@ -217,7 +217,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
       adminPassword: adminPassword
       linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration) // TODO: workaround for https://github.com/Azure/bicep/issues/449
       //This is Base64 of AzureVMsetup.sh.  Auto-genned by pipeline.  Can be genned using Convert-AzureVMsetup.ps1
-      customData: loadFileAsBase64('./.devcontainer/library-scripts/BareVMSetup.sh')
+      customData: loadFileAsBase64('./.devcontainer/setupScripts/runFromAzureTemplate.sh')
     }
   }
 }

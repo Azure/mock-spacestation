@@ -1,0 +1,35 @@
+# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.191.0/containers/dotnetcore/.devcontainer/base.Dockerfile
+
+ARG VARIANT="5.0"
+FROM mcr.microsoft.com/vscode/devcontainers/dotnetcore:0-${VARIANT}
+
+ARG GROUNDSTATION_USER=azureuser
+ARG GROUNDSTATION_ROOTDIR=/groundstation
+ARG USER_UID=5678
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid $USER_GID $GROUNDSTATION_USER \
+    && useradd --uid $USER_UID --gid $USER_GID -m $GROUNDSTATION_USER \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $GROUNDSTATION_USER ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$GROUNDSTATION_USER \
+    && chmod 0440 /etc/sudoers.d/$GROUNDSTATION_USER
+
+# ********************************************************
+# Setup root directory and update permissions
+# ********************************************************
+RUN mkdir -p $GROUNDSTATION_ROOTDIR \
+    && sudo chown $GROUNDSTATION_USER $GROUNDSTATION_ROOTDIR
+
+ADD setupScripts/deployGroundStation.sh $GROUNDSTATION_ROOTDIR/deployGroundStation.sh
+
+
+# ********************************************************
+# Move to user
+# ********************************************************
+USER $GROUNDSTATION_USER
+WORKDIR $GROUNDSTATION_ROOTDIR
+
+#Setup the Docker Volume for the docker daemon
+VOLUME /var/lib/docker

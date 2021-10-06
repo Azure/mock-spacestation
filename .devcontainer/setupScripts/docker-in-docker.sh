@@ -108,6 +108,6 @@ else
 		fi
 		sleep 1
 	done
-	[[ $1 ]] && exec "$@"
-	exec bash --login
+	#[[ $1 ]] && exec "$@"
+	#exec bash --login
 fi
