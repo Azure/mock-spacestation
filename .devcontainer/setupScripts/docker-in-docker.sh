@@ -90,14 +90,14 @@ rm -rf /var/run/docker.pid
 # otherwise, spawn a shell as well
 if [ "$PORT" ]
 then
-	exec dockerd -H 0.0.0.0:$PORT -H unix:///var/run/docker.sock \
+	exec dockerd --storage-driver=vfs -H 0.0.0.0:$PORT -H unix:///var/run/docker.sock \
 		$DOCKER_DAEMON_ARGS
 else
 	if [ "$LOG" == "file" ]
 	then
-		dockerd $DOCKER_DAEMON_ARGS &>/var/log/docker.log &
+		dockerd --storage-driver=vfs $DOCKER_DAEMON_ARGS &>/var/log/docker.log &
 	else
-		dockerd $DOCKER_DAEMON_ARGS &
+		dockerd --storage-driver=vfs $DOCKER_DAEMON_ARGS &
 	fi
 	(( timeout = 60 + SECONDS ))
 	until docker info >/dev/null 2>&1
