@@ -52,7 +52,7 @@ RUN mkdir -p /home/${SPACESTATION_USER}/.ssh  && \
     chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation/queue && \
     chmod 1777 /home/${SPACESTATION_USER}/toGroundStation/queue && \
     cat /home/${SPACESTATION_USER}/.ssh/id_rsa.pub >> /home/${SPACESTATION_USER}/.ssh/authorized_keys && \
-    echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} \
+    echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} && \
     chmod 0440 /etc/sudoers.d/${SPACESTATION_USER}
 
 # Tweak the SSH config so we can run it
