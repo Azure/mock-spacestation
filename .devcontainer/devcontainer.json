@@ -15,7 +15,6 @@
 		"--init",
 		"--privileged"
 	],
-	//"overrideCommand": false,
 	// Set *default* container specific settings.json values on container create.
 	"settings": {},
 	// Add the IDs of extensions you want installed when the container is created.
