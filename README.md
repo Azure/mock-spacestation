@@ -70,7 +70,7 @@ All you'll need is an Azure Subscription to get started.
     Write it's output to the terminal with `cat`:
 
     ```bash
-    cat ./mockspacestation-provisioning.log
+    cat groundstation/logs/deployGroundStation.log
     ```
 
     You should see a log that ends in **Mock SpaceStation Configuration (v2.1) Complete**:
