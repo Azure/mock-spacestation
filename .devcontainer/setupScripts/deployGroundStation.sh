@@ -220,7 +220,6 @@ sudo apt-get -y install --no-install-recommends trickle cron
 
 
 writeToProvisioningLog "Building SSH connection to '$SPACESTATION_CONTAINER_NAME'..."
-#mockSpaceStationIP=$(sudo docker inspect mockspacestation --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 {
     echo '#!/bin/bash'
     echo 'mockSpaceStationIP=$(sudo docker inspect mockspacestation --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")'    
