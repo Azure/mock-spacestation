@@ -27,9 +27,6 @@
 		"timonwong.shellcheck"
 	],
 	"updateContentCommand": ". /groundstation/deployGroundStation.sh",
-	// "mounts": [
-	// 	//"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
-	// ],
 	"remoteUser": "azureuser",
 	"remoteEnv": {
 		"VSCODE_DEV_CONTAINER": "true"
