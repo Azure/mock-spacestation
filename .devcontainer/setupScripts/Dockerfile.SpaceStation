@@ -65,6 +65,3 @@ RUN sed -i'' -e's/^#PermitRootLogin prohibit-password$/PermitRootLogin yes/' /et
 # Start up the SSH Server Daemon and the docker-in-docker wrapper script
 CMD ["sh", "-c", "/usr/sbin/sshd ; /bin/bash"]
 
-
-# USER $SPACESTATION_USER
-#WORKDIR $GROUNDSTATION_ROOTDIR
