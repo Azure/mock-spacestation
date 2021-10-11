@@ -41,7 +41,6 @@ sudo chown -R "$GROUNDSTATION_USER" "$GROUNDSTATION_ROOTDIR"
 # ********************************************************
 # Persistant Variables: START
 # ********************************************************
-#sudo bash -c 'cat > /etc/profile.d/mock-spacestation-vars.sh' << EOF
 sudo bash -c 'cat >> /etc/bash.bashrc' << EOF
 export GROUNDSTATION_LOGS="${GROUNDSTATION_ROOTDIR}"
 export GROUNDSTATION_OUTBOX="${GROUNDSTATION_OUTBOX}"
