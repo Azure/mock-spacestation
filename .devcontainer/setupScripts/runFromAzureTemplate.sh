@@ -7,5 +7,5 @@
 # Used on a blank VM Sets via Azure templates to deploy the Mock SpaceStation environment.  Mostly a wrapper for deployGroundStation.sh
 # Syntax: ./runFromAzureTemplate.sh
 
-curl -O "https://raw.githubusercontent.com/azure/mock-spacestation/.devcontainer/setupScripts/deployGroundStation.sh"
+curl -O "https://raw.githubusercontent.com/Azure/mock-spacestation/main/.devcontainer/setupScripts/deployGroundStation.sh"
 . ./deployGroundStation.sh
