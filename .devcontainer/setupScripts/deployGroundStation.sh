@@ -264,8 +264,6 @@ sudo chmod 1777 /tmp/sync-to-spacestation-noThrottle.sh
 echo "* * * * * /usr/bin/flock -w 0 /tmp/sync-to-spacestation-job.lock /tmp/sync-to-spacestation.sh >> $GROUNDSTATION_LOGS/sync-to-spacestation.log 2>&1" > /tmp/sync-to-spacestation-job
 crontab /tmp/sync-to-spacestation-job
 sudo service cron start
-#crontab -l #list cron jobs
-#crontab -r #remove cron jobs
 
 writeToProvisioningLog "-----------------------------------------------------------"
 writeToProvisioningLog "Mock SpaceStation Configuration (v $GROUNDSTATION_VERSION) Complete.  Happy Space Deving!"
