@@ -36,15 +36,6 @@ spacestation_docker_file_uri="${repository_uri}/${branch_name}/${container_dir}/
 
 GROUNDSTATION_USER=$(whoami)
 
-info_log "Getting ${docker_in_docker_script_uri}..."
-GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_in_docker_script_uri} | base64)
-
-info_log "Getting ${docker_from_docker_script_uri}..."
-SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_from_docker_script_uri} | base64)
-
-info_log "Getting ${spacestation_docker_file_uri}..."
-SPACESTATION_DOCKERFILE_CONTENTS=$(curl -s ${spacestation_docker_file_uri} | base64)
-
 export GROUNDSTATION_USER=""
 export GROUNDSTATION_VERSION="2.1"
 export GROUNDSTATION_ROOTDIR="/groundstation"
@@ -53,14 +44,39 @@ export GROUNDSTATION_OUTBOX_DIR="${GROUNDSTATION_ROOTDIR}/toSpaceStation"
 export GROUNDSTATION_INBOX_DIR="${GROUNDSTATION_ROOTDIR}/fromSpaceStation"
 export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-in-docker"
 export GROUNDSTATION_SSHKEY_FILEPATH="${HOME}/.ssh/id_rsa_spacestation"
-export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS
 
 export SPACESTATION_NETWORK_NAME="spaceDevVNet"
 export SPACESTATION_CONTAINER_NAME="mockspacestation"
-export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS
-export SPACESTATION_DOCKERFILE_CONTENTS
 
 export PROVISIONING_LOG="${GROUNDSTATION_LOGS_DIR}/deploy-groundstation.log"
+
+# check user
+
+if [[ $(whoami) -ne $GROUNDSTATION_USER ]]; then
+	echo "Please rerun this script as user '$GROUNDSTATION_USER'."
+	exit 1
+fi
+
+# setup logging
+
+writeToProvisioningLog() {
+	echo "$(date +%Y-%m-%d-%H%M%S): $1"
+	echo "$(date +%Y-%m-%d-%H%M%S): $1" >>"$PROVISIONING_LOG"
+}
+
+# download scripts
+
+info_log "Getting ${docker_in_docker_script_uri}..."
+GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_in_docker_script_uri} | base64)
+export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS
+
+info_log "Getting ${docker_from_docker_script_uri}..."
+SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_from_docker_script_uri} | base64)
+export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS
+
+info_log "Getting ${spacestation_docker_file_uri}..."
+SPACESTATION_DOCKERFILE_CONTENTS=$(curl -s ${spacestation_docker_file_uri} | base64)
+export SPACESTATION_DOCKERFILE_CONTENTS
 
 # ********************************************************
 # Miscellaneous Directories: START
@@ -121,16 +137,6 @@ EOF
 # Persistant Variables: END
 # ********************************************************
 
-if [[ $(whoami) -ne $GROUNDSTATION_USER ]]; then
-	echo "Please rerun this script as user '$GROUNDSTATION_USER'."
-	exit 1
-fi
-
-writeToProvisioningLog() {
-	echo "$(date +%Y-%m-%d-%H%M%S): $1"
-	echo "$(date +%Y-%m-%d-%H%M%S): $1" >>"$PROVISIONING_LOG"
-}
-
 # ********************************************************
 # Setup Docker: START
 # ********************************************************
@@ -146,46 +152,53 @@ writeToProvisioningLog "Deploy Docker in GroundStation (START)"
 
 sudo apt-get update && export DEBIAN_FRONTEND=noninteractive &&
 	sudo apt-get -y install --no-install-recommends \
+		util-linux \
 		apt-transport-https \
 		ca-certificates \
 		curl \
 		gnupg \
 		lsb-release \
-		flock \
 		cron \
 		trickle \
 		libpam-cgfs \
 		acl \
 		figlet
 
-writeToProvisioningLog "Installing regular Docker"
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+# check for docker
+if ! command -v docker &> /dev/null; then
 
-sudo echo \
-	"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+	writeToProvisioningLog "Installing Docker..."
+	
+	sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-sudo apt-get update &&
-	sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+	sudo echo \
+		"deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+		$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+
+	sudo apt-get update && sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+
+	writeToProvisioningLog "Docker installed!"
+
+fi
 
 ISREMOTECONTAINER=$(printenv | grep "REMOTE_CONTAINER")
 
 if [ -n "${ISREMOTECONTAINER}" ]; then
-	writeToProvisioningLog "...Enabling Docker in Docker"
 
-	writeToProvisioningLog "...Writing Docker-in-Docker wrapper file to '$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH'..."
-	# Decode the DinD wrapper file embedded in the variable and write to the real file.
-	# This keeps us needing only one uber file
-	# base64 -w0 filename
-	echo $GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS | base64 --decode | sudo tee $GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH >/dev/null
-	sudo chmod +x "$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH"
+	writeToProvisioningLog "Enabling Docker in Docker..."
 
-	sudo bash $GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH
+	writeToProvisioningLog "Downloading Docker-in-Docker script from '${docker_in_docker_script_uri}' to '$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH'..."
+	curl -s -o "$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH" "${docker_in_docker_script_uri}"
+
+	writeToProvisioningLog "Executing Docker-in-Docker script at '$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH'..."
+	. "$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH"
+
+	writeToProvisioningLog "Docker in Docker Enabled!"
+
 fi
+
 sudo usermod -aG docker "$GROUNDSTATION_USER"
 sudo setfacl -m user:"$GROUNDSTATION_USER":rw /var/run/docker.sock
-
-writeToProvisioningLog "Docker installed"
 
 # ********************************************************
 # Setup Docker: END
