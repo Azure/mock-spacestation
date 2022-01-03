@@ -14,7 +14,7 @@ error_log() {
 }
 
 info_log() {
-	echo "deploy-groundstation.sh ERROR: ${1}" 1>&2
+	echo "deploy-groundstation.sh INFO: ${1}" 1>&2
 }
 
 # get supporting scripts
@@ -26,42 +26,43 @@ script_dir="library-scripts"
 
 docker_in_docker_filename="docker-in-docker.sh"
 docker_from_docker_filename="docker-debian.sh"
-docker_groundstation_filename="Dockerfile.Groundstation"
+docker_spacestation_filename="Dockerfile.Groundstation"
 
 docker_in_docker_script_uri="${repository_uri}/${branch_name}/${container_dir}/${script_dir}/${docker_in_docker_filename}"
 docker_from_docker_script_uri="${repository_uri}/${branch_name}/${container_dir}/${script_dir}/${docker_from_docker_filename}"
-spacestation_docker_file_uri="${repository_uri}/${branch_name}/${container_dir}/${docker_groundstation_filename}"
+spacestation_docker_file_uri="${repository_uri}/${branch_name}/${container_dir}/${docker_spacestation_filename}"
 
-# set paths
-
-# set container names
-
-# configure directories
-
-export GROUNDSTATION_ROOTDIR="/groundstation"
-export GROUNDSTATION_USER=""
-export GROUNDSTATION_LOGS="${GROUNDSTATION_ROOTDIR}/logs"
-export GROUNDSTATION_OUTBOX="${GROUNDSTATION_ROOTDIR}/toSpaceStation"
-export GROUNDSTATION_INBOX="${GROUNDSTATION_ROOTDIR}/fromSpaceStation"
-export GROUNDSTATION_DinD="/usr/local/bin/docker-in-docker"
-export GROUNDSTATION_DinD_CONTENTSBASE64="microsoft/vscode-dev-containers/containers/docker-in-docker.sh"
-export SPACESTATION_DOCKERWRAPPERCONTENTS_BASE64="microsoft/vscode-dev-containers/containers/docker-from-docker.sh"
-export SPACESTATION_DOCKERFILECONTENTS_BASE64="azure/mock-spacestation/Dockerfile.Spacestation"
-export GROUNDSTATION_SSHKEY="${HOME}/.ssh/id_rsa_spaceStation"
-export PROVISIONING_LOG="${GROUNDSTATION_LOGS}/deploy-groundstation.log"
-export SPACESTATION_NETWORK_NAME="spaceDevVNet"
-export SPACESTATION_CONTAINER_NAME="mockspacestation"
-export GROUNDSTATION_VERSION="2.1"
+# set globals
 
 GROUNDSTATION_USER=$(whoami)
+GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_in_docker_script_uri} | base64)
+SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_from_docker_script_uri} | base64)
+SPACESTATION_DOCKERFILE_CONTENTS=$(curl -s ${spacestation_docker_file_uri} | base64)
+
+export GROUNDSTATION_USER=""
+export GROUNDSTATION_VERSION="2.1"
+export GROUNDSTATION_ROOTDIR="/groundstation"
+export GROUNDSTATION_LOGS_DIR="${GROUNDSTATION_ROOTDIR}/logs"
+export GROUNDSTATION_OUTBOX_DIR="${GROUNDSTATION_ROOTDIR}/toSpaceStation"
+export GROUNDSTATION_INBOX_DIR="${GROUNDSTATION_ROOTDIR}/fromSpaceStation"
+export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-in-docker"
+export GROUNDSTATION_SSHKEY_FILEPATH="${HOME}/.ssh/id_rsa_spacestation"
+export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS
+
+export SPACESTATION_NETWORK_NAME="spaceDevVNet"
+export SPACESTATION_CONTAINER_NAME="mockspacestation"
+export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS
+export SPACESTATION_DOCKERFILE_CONTENTS
+
+export PROVISIONING_LOG="${GROUNDSTATION_LOGS_DIR}/deploy-groundstation.log"
 
 # ********************************************************
 # Miscellaneous Directories: START
 # ********************************************************
 
-sudo mkdir -p "$GROUNDSTATION_LOGS"
-sudo mkdir -p "$GROUNDSTATION_OUTBOX"
-sudo mkdir -p "$GROUNDSTATION_INBOX"
+sudo mkdir -p "$GROUNDSTATION_LOGS_DIR"
+sudo mkdir -p "$GROUNDSTATION_OUTBOX_DIR"
+sudo mkdir -p "$GROUNDSTATION_INBOX_DIR"
 sudo mkdir -p "$HOME"/.ssh
 sudo mkdir -p "$GROUNDSTATION_ROOTDIR"
 sudo chown -R "$GROUNDSTATION_USER" "$GROUNDSTATION_ROOTDIR"
@@ -75,19 +76,20 @@ sudo chown -R "$GROUNDSTATION_USER" "$GROUNDSTATION_ROOTDIR"
 # ********************************************************
 
 sudo bash -c 'cat >> /etc/bash.bashrc' <<EOF
-export GROUNDSTATION_LOGS="${GROUNDSTATION_ROOTDIR}"
-export GROUNDSTATION_OUTBOX="${GROUNDSTATION_OUTBOX}"
-export GROUNDSTATION_INBOX="${GROUNDSTATION_INBOX}"
-export GROUNDSTATION_DinD="${GROUNDSTATION_DinD}"
-export GROUNDSTATION_DinD_CONTENTSBASE64="${GROUNDSTATION_DinD_CONTENTSBASE64}"
-export GROUNDSTATION_SSHKEY="${GROUNDSTATION_SSHKEY}"
-export PROVISIONING_LOG="${PROVISIONING_LOG}"
-export SPACESTATION_NETWORK_NAME="${SPACESTATION_NETWORK_NAME}"
-export SPACESTATION_CONTAINER_NAME="${SPACESTATION_CONTAINER_NAME}"
-export GROUNDSTATION_ROOTDIR="${GROUNDSTATION_ROOTDIR}"
-export GROUNDSTATION_USER="${GROUNDSTATION_USER}"
-export GROUNDSTATION_DinD_CONTENTSBASE64="${GROUNDSTATION_DinD_CONTENTSBASE64}"
-export SPACESTATION_DOCKERWRAPPERCONTENTS_BASE64="${SPACESTATION_DOCKERWRAPPERCONTENTS_BASE64}"
+export GROUNDSTATION_USER=""
+export GROUNDSTATION_VERSION="2.1"
+export GROUNDSTATION_ROOTDIR="/groundstation"
+export GROUNDSTATION_LOGS_DIR="${GROUNDSTATION_ROOTDIR}/logs"
+export GROUNDSTATION_OUTBOX_DIR="${GROUNDSTATION_ROOTDIR}/toSpaceStation"
+export GROUNDSTATION_INBOX_DIR="${GROUNDSTATION_ROOTDIR}/fromSpaceStation"
+export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-in-docker"
+export GROUNDSTATION_SSHKEY_FILEPATH="${HOME}/.ssh/id_rsa_spacestation"
+export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS
+export SPACESTATION_NETWORK_NAME="spaceDevVNet"
+export SPACESTATION_CONTAINER_NAME="mockspacestation"
+export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS
+export SPACESTATION_DOCKERFILE_CONTENTS
+export PROVISIONING_LOG="${GROUNDSTATION_LOGS_DIR}/deploy-groundstation.log"
 echo ""
 echo ""
 echo ""
@@ -100,8 +102,8 @@ echo ""
 echo "This environment emulates the configuration and networking constraints observed by the Microsoft Azure Space Team while developing their genomics experiment to run on the International Space Station"
 echo ""
 echo "You are connected to the GroundStation"
-echo "     To send a file to the SpaceStation, place it in the '$GROUNDSTATION_OUTBOX' directory"
-echo "     Files received from the SpaceStation will be in the '$GROUNDSTATION_INBOX' directory"
+echo "     To send a file to the SpaceStation, place it in the '$GROUNDSTATION_OUTBOX_DIR' directory"
+echo "     Files received from the SpaceStation will be in the '$GROUNDSTATION_INBOX_DIR' directory"
 echo "To SSH to SpaceStation: '${GROUNDSTATION_ROOTDIR}/ssh-to-spacestation.sh'"
 echo "     Files received from the GroundStation will be in '/home/$GROUNDSTATION_USER/fromGroundStation/' directory"
 echo "     To send a file to the GroundStation, place it in the '/home/$GROUNDSTATION_USER/toGroundStation/' directory"
@@ -165,14 +167,14 @@ ISREMOTECONTAINER=$(printenv | grep "REMOTE_CONTAINER")
 if [ -n "${ISREMOTECONTAINER}" ]; then
 	writeToProvisioningLog "...Enabling Docker in Docker"
 
-	writeToProvisioningLog "...Writing Docker-in-Docker wrapper file to '$GROUNDSTATION_DinD'..."
+	writeToProvisioningLog "...Writing Docker-in-Docker wrapper file to '$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH'..."
 	# Decode the DinD wrapper file embedded in the variable and write to the real file.
 	# This keeps us needing only one uber file
 	# base64 -w0 filename
-	echo $GROUNDSTATION_DinD_CONTENTSBASE64 | base64 --decode | sudo tee $GROUNDSTATION_DinD >/dev/null
-	sudo chmod +x "$GROUNDSTATION_DinD"
+	echo $GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS | base64 --decode | sudo tee $GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH >/dev/null
+	sudo chmod +x "$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH"
 
-	sudo bash $GROUNDSTATION_DinD
+	sudo bash $GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH
 fi
 sudo usermod -aG docker "$GROUNDSTATION_USER"
 sudo setfacl -m user:"$GROUNDSTATION_USER":rw /var/run/docker.sock
@@ -189,10 +191,10 @@ writeToProvisioningLog "Docker installed"
 
 writeToProvisioningLog "SSH Key Generation in GroundStation (START)"
 sudo chmod 0700 "$HOME"/.ssh
-ssh-keygen -t rsa -b 4096 -q -N '' -f "$GROUNDSTATION_SSHKEY"
-sudo chmod 600 "$GROUNDSTATION_SSHKEY" &&
-	sudo chmod 600 "$GROUNDSTATION_SSHKEY".pub &&
-	cat "${GROUNDSTATION_SSHKEY}".pub >>/home/"${GROUNDSTATION_USER}"/.ssh/authorized_keys &&
+ssh-keygen -t rsa -b 4096 -q -N '' -f "$GROUNDSTATION_SSHKEY_FILEPATH"
+sudo chmod 600 "$GROUNDSTATION_SSHKEY_FILEPATH" &&
+	sudo chmod 600 "$GROUNDSTATION_SSHKEY_FILEPATH".pub &&
+	cat "${GROUNDSTATION_SSHKEY_FILEPATH}".pub >>/home/"${GROUNDSTATION_USER}"/.ssh/authorized_keys &&
 	writeToProvisioningLog "SSH Key Generation in GroundStation (COMPLETE)"
 
 # ********************************************************
@@ -223,17 +225,13 @@ writeToProvisioningLog "Docker Config (COMPLETE)"
 # ********************************************************
 # Deploy SpaceStation Container: START
 # ********************************************************
-# docker container rm mockspacestation -f
-# docker image rm mockspacestation-img
-# docker container attach mockspacestation
-# base64 -w0 ./.devcontainer/setupScripts/Dockerfile.Spacestation > output.txt
 
 writeToProvisioningLog "Building Space Station Image '$SPACESTATION_CONTAINER_NAME-img'..."
-echo $SPACESTATION_DOCKERFILECONTENTS_BASE64 | base64 --decode | sudo tee /tmp/Dockerfile.Spacestation >/dev/null
+echo $SPACESTATION_DOCKERFILE_CONTENTS | base64 --decode | sudo tee /tmp/Dockerfile.Spacestation >/dev/null
 sudo chown "$GROUNDSTATION_USER" /tmp/Dockerfile.Spacestation
 sudo chmod 1777 /tmp/Dockerfile.Spacestation
 
-sudo docker build -t "$SPACESTATION_CONTAINER_NAME-img" --no-cache --build-arg SPACESTATION_USER="$GROUNDSTATION_USER" --build-arg PRIV_KEY="$(cat $GROUNDSTATION_SSHKEY)" --build-arg PUB_KEY="$(cat $GROUNDSTATION_SSHKEY.pub)" --build-arg SPACESTATION_DOCKERWRAPPERCONTENTS_BASE64="$GROUNDSTATION_DinD_CONTENTSBASE64" --file /tmp/Dockerfile.Spacestation .
+sudo docker build -t "$SPACESTATION_CONTAINER_NAME-img" --no-cache --build-arg SPACESTATION_USER="$GROUNDSTATION_USER" --build-arg PRIV_KEY="$(cat $GROUNDSTATION_SSHKEY_FILEPATH)" --build-arg PUB_KEY="$(cat $GROUNDSTATION_SSHKEY_FILEPATH.pub)" --build-arg SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS="$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS" --file /tmp/Dockerfile.Spacestation .
 writeToProvisioningLog "Space Station Image '$SPACESTATION_CONTAINER_NAME-img' successfully built"
 
 writeToProvisioningLog "Starting Space Station Container '$SPACESTATION_CONTAINER_NAME'..."
@@ -257,7 +255,7 @@ writeToProvisioningLog "Building SSH connection to '$SPACESTATION_CONTAINER_NAME
 {
 	echo '#!/bin/bash'
 	echo 'mockSpaceStationIP=$(sudo docker inspect mockspacestation --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")'
-	echo 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$GROUNDSTATION_SSHKEY" "$GROUNDSTATION_USER"@"$mockSpaceStationIP"'
+	echo 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$GROUNDSTATION_SSHKEY_FILEPATH" "$GROUNDSTATION_USER"@"$mockSpaceStationIP"'
 } >${GROUNDSTATION_ROOTDIR}/ssh-to-spacestation.sh
 
 sudo chmod +x ${GROUNDSTATION_ROOTDIR}/ssh-to-spacestation.sh
@@ -266,13 +264,13 @@ writeToProvisioningLog "Building sync job to '$SPACESTATION_CONTAINER_NAME' (${G
 {
 	echo '#!/bin/bash'
 	echo 'mockSpaceStationIP=$(sudo docker inspect mockspacestation --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")'
-	echo "GROUNDSTATION_SSHKEY=$GROUNDSTATION_SSHKEY"
+	echo "GROUNDSTATION_SSHKEY_FILEPATH=$GROUNDSTATION_SSHKEY_FILEPATH"
 	echo "GROUNDSTATION_ROOTDIR=$GROUNDSTATION_ROOTDIR"
 	echo "GROUNDSTATION_USER=$GROUNDSTATION_USER"
 	echo "Starting push to SpaceStation..."
-	echo 'rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY" --remove-source-files --verbose --progress $GROUNDSTATION_ROOTDIR/toSpaceStation/* $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/fromGroundStation/'
+	echo 'rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_ROOTDIR/toSpaceStation/* $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/fromGroundStation/'
 	echo "Starting pull from SpaceStation..."
-	echo 'rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY" --remove-source-files --verbose --progress $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/toGroundStation/* $GROUNDSTATION_ROOTDIR/fromSpaceStation/'
+	echo 'rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/toGroundStation/* $GROUNDSTATION_ROOTDIR/fromSpaceStation/'
 } >/tmp/sync-to-spacestation.sh
 
 sudo chmod +x /tmp/sync-to-spacestation.sh
@@ -281,19 +279,19 @@ sudo chmod 1777 /tmp/sync-to-spacestation.sh
 {
 	echo '#!/bin/bash'
 	echo 'mockSpaceStationIP=$(sudo docker inspect mockspacestation --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")'
-	echo "GROUNDSTATION_SSHKEY=$GROUNDSTATION_SSHKEY"
+	echo "GROUNDSTATION_SSHKEY_FILEPATH=$GROUNDSTATION_SSHKEY_FILEPATH"
 	echo "GROUNDSTATION_ROOTDIR=$GROUNDSTATION_ROOTDIR"
 	echo "GROUNDSTATION_USER=$GROUNDSTATION_USER"
 	echo "Starting push to SpaceStation..."
-	echo 'rsync --rsh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY" --remove-source-files --verbose --progress $GROUNDSTATION_ROOTDIR/toSpaceStation/* $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/fromGroundStation/'
+	echo 'rsync --rsh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_ROOTDIR/toSpaceStation/* $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/fromGroundStation/'
 	echo "Starting pull from SpaceStation..."
-	echo 'rsync --rsh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY" --remove-source-files --verbose --progress $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/toGroundStation/* $GROUNDSTATION_ROOTDIR/fromSpaceStation/'
+	echo 'rsync --rsh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/toGroundStation/* $GROUNDSTATION_ROOTDIR/fromSpaceStation/'
 } >/tmp/sync-to-spacestation-noThrottle.sh
 
 sudo chmod +x /tmp/sync-to-spacestation-noThrottle.sh
 sudo chmod 1777 /tmp/sync-to-spacestation-noThrottle.sh
 
-echo "* * * * * /usr/bin/flock -w 0 /tmp/sync-to-spacestation-job.lock /tmp/sync-to-spacestation.sh >> $GROUNDSTATION_LOGS/sync-to-spacestation.log 2>&1" >/tmp/sync-to-spacestation-job
+echo "* * * * * /usr/bin/flock -w 0 /tmp/sync-to-spacestation-job.lock /tmp/sync-to-spacestation.sh >> $GROUNDSTATION_LOGS_DIR/sync-to-spacestation.log 2>&1" >/tmp/sync-to-spacestation-job
 crontab /tmp/sync-to-spacestation-job
 sudo service cron start
 
@@ -317,8 +315,8 @@ echo ""
 echo "This environment emulates the configuration and networking constraints observed by the Microsoft Azure Space Team while developing their genomics experiment to run on the International Space Station"
 echo ""
 echo "You are connected to the GroundStation"
-echo "     To send a file to the SpaceStation, place it in the '$GROUNDSTATION_OUTBOX' directory"
-echo "     Files received from the SpaceStation will be in the '$GROUNDSTATION_INBOX' directory"
+echo "     To send a file to the SpaceStation, place it in the '$GROUNDSTATION_OUTBOX_DIR' directory"
+echo "     Files received from the SpaceStation will be in the '$GROUNDSTATION_INBOX_DIR' directory"
 echo "To SSH to SpaceStation: '${GROUNDSTATION_ROOTDIR}/ssh-to-spacestation.sh'"
 echo "     Files received from the GroundStation will be in '/home/$GROUNDSTATION_USER/fromGroundStation/' directory"
 echo "     To send a file to the GroundStation, place it in the '/home/$GROUNDSTATION_USER/toGroundStation/' directory"
