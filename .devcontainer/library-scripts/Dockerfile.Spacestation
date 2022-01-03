@@ -3,7 +3,7 @@ EXPOSE 22
 ARG SPACESTATION_USER
 ARG PRIV_KEY
 ARG PUB_KEY
-ARG SPACESTATION_DOCKERWRAPPERCONTENTS_BASE64
+ARG DOCKER_FROM_DOCKER_SCRIPT_URI
 ENV SPACESTATION_DOCKERWRAPPER="/usr/local/bin/docker-wrapper"
 
 # Install Docker + dependencies and RSync and SSH Server
@@ -33,8 +33,9 @@ RUN apt-get update \
    && apt-get -y install docker-ce docker-ce-cli containerd.io
 RUN adduser -u 5678 --disabled-password --gecos "" ${SPACESTATION_USER}
 
-RUN echo $SPACESTATION_DOCKERWRAPPERCONTENTS_BASE64 > /tmp/dockerWrapper.base64 && base64 --decode /tmp/dockerWrapper.base64 > $SPACESTATION_DOCKERWRAPPER
-RUN chmod +x "$SPACESTATION_DOCKERWRAPPER" 
+# get docker from docker script
+RUN curl -s "${spacestation_docker_file_uri}" -o "${SPACESTATION_DOCKERWRAPPER}"
+RUN chmod +x "${SPACESTATION_DOCKERWRAPPER}"
 
 # Write the private and public keys to the new user's environment.  Update permissions on the groundstation directory so the user can read/write to it
 RUN mkdir -p /home/${SPACESTATION_USER}/.ssh  && \
