@@ -35,8 +35,14 @@ spacestation_docker_file_uri="${repository_uri}/${branch_name}/${container_dir}/
 # set globals
 
 GROUNDSTATION_USER=$(whoami)
+
+info_log "Getting ${docker_in_docker_script_uri}..."
 GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_in_docker_script_uri} | base64)
+
+info_log "Getting ${docker_from_docker_script_uri}..."
 SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_from_docker_script_uri} | base64)
+
+info_log "Getting ${spacestation_docker_file_uri}..."
 SPACESTATION_DOCKERFILE_CONTENTS=$(curl -s ${spacestation_docker_file_uri} | base64)
 
 export GROUNDSTATION_USER=""
