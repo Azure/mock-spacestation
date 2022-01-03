@@ -34,7 +34,7 @@ RUN apt-get update \
 RUN adduser -u 5678 --disabled-password --gecos "" ${SPACESTATION_USER}
 
 # get docker from docker script
-RUN curl -s "${spacestation_docker_file_uri}" -o "${SPACESTATION_DOCKERWRAPPER}"
+RUN curl -s "${DOCKER_FROM_DOCKER_SCRIPT_URI}" -o "${SPACESTATION_DOCKERWRAPPER}"
 RUN chmod +x "${SPACESTATION_DOCKERWRAPPER}"
 
 # Write the private and public keys to the new user's environment.  Update permissions on the groundstation directory so the user can read/write to it

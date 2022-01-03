@@ -20,17 +20,16 @@ info_log() {
 # get supporting scripts
 
 repository_uri="https://raw.githubusercontent.com/Azure/mock-spacestation"
-branch_name="main"
-container_dir=".devcontainer"
-script_dir="library-scripts"
+branch_name="glenn/jan2022updates"
+script_dir=".devcontainer/library-scripts"
 
 docker_in_docker_filename="docker-in-docker.sh"
 docker_from_docker_filename="docker-debian.sh"
 docker_spacestation_filename="Dockerfile.Spacestation"
 
-docker_in_docker_script_uri="${repository_uri}/${branch_name}/${container_dir}/${script_dir}/${docker_in_docker_filename}"
-docker_from_docker_script_uri="${repository_uri}/${branch_name}/${container_dir}/${script_dir}/${docker_from_docker_filename}"
-spacestation_docker_file_uri="${repository_uri}/${branch_name}/${container_dir}/${docker_spacestation_filename}"
+docker_in_docker_script_uri="${repository_uri}/${branch_name}/${script_dir}/${docker_in_docker_filename}"
+docker_from_docker_script_uri="${repository_uri}/${branch_name}/${script_dir}/${docker_from_docker_filename}"
+spacestation_docker_file_uri="${repository_uri}/${branch_name}/${script_dir}/${docker_spacestation_filename}"
 
 # set globals
 
@@ -46,8 +45,8 @@ export GROUNDSTATION_SSHKEY_FILEPATH="${HOME}/.ssh/id_rsa_spacestation"
 
 export SPACESTATION_NETWORK_NAME="spaceDevVNet"
 export SPACESTATION_DOCKERFILE_PATH="/tmp/Dockerfile.Spacestation"
-export SPACESTATION_IMAGE_NAME="${SPACESTATION_CONTAINER_NAME}-img"
 export SPACESTATION_CONTAINER_NAME="mockspacestation"
+export SPACESTATION_IMAGE_NAME="${SPACESTATION_CONTAINER_NAME}-img"
 
 export PROVISIONING_LOG="${GROUNDSTATION_LOGS_DIR}/deploy-groundstation.log"
 
@@ -257,7 +256,7 @@ writeToProvisioningLog "docker networking setup complete"
 
 writeToProvisioningLog "building spacestation image '${SPACESTATION_IMAGE_NAME}'..."
 
-writeToProvisioningLog "write spacestation Dockerfile into '${SPACESTATION_DOCKERFILE_PATH}' from ${spacestation_docker_file_uri}..."
+writeToProvisioningLog "write spacestation Dockerfile into '${SPACESTATION_DOCKERFILE_PATH}' from '${spacestation_docker_file_uri}'..."
 curl -s "${spacestation_docker_file_uri}" -o "${SPACESTATION_DOCKERFILE_PATH}"
 
 writeToProvisioningLog "change Dockerfile at '${SPACESTATION_DOCKERFILE_PATH}' ownership to user '${GROUNDSTATION_USER}'"
@@ -271,8 +270,7 @@ sudo docker build -t "${SPACESTATION_IMAGE_NAME}" \
 	--build-arg PRIV_KEY="$(cat "${GROUNDSTATION_SSHKEY_FILEPATH}")" \
 	--build-arg PUB_KEY="$(cat "${GROUNDSTATION_SSHKEY_FILEPATH}".pub)" \
 	--build-arg DOCKER_FROM_DOCKER_SCRIPT_URI="${docker_from_docker_script_uri}" \
-	--file "${SPACESTATION_DOCKERFILE_PATH}"
-	.
+	--file "${SPACESTATION_DOCKERFILE_PATH}" .
 
 writeToProvisioningLog "spacestation image '${SPACESTATION_IMAGE_NAME}' built!"
 
