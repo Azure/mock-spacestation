@@ -47,6 +47,7 @@ export SPACESTATION_NETWORK_NAME="spaceDevVNet"
 export SPACESTATION_DOCKERFILE_PATH="/tmp/Dockerfile.Spacestation"
 export SPACESTATION_CONTAINER_NAME="mockspacestation"
 export SPACESTATION_IMAGE_NAME="${SPACESTATION_CONTAINER_NAME}-img"
+export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-from-docker"
 
 export PROVISIONING_LOG="${GROUNDSTATION_LOGS_DIR}/deploy-groundstation.log"
 
@@ -270,11 +271,14 @@ sudo docker build -t "${SPACESTATION_IMAGE_NAME}" \
 	--build-arg PRIV_KEY="$(cat "${GROUNDSTATION_SSHKEY_FILEPATH}")" \
 	--build-arg PUB_KEY="$(cat "${GROUNDSTATION_SSHKEY_FILEPATH}".pub)" \
 	--build-arg DOCKER_FROM_DOCKER_SCRIPT_URI="${docker_from_docker_script_uri}" \
+	--build-arg DOCKER_FROM_DOCKER_SCRIPT_PATH="${SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH}" \
 	--file "${SPACESTATION_DOCKERFILE_PATH}" .
 
 writeToProvisioningLog "spacestation image '${SPACESTATION_IMAGE_NAME}' built!"
 
 writeToProvisioningLog "starting spacestation container '$SPACESTATION_CONTAINER_NAME'..."
+
+writeToProvisioningLog "run image '${SPACESTATION_IMAGE_NAME}'"
 sudo docker run -dit \
 	--privileged \
 	--hostname "$SPACESTATION_CONTAINER_NAME" \
@@ -282,8 +286,10 @@ sudo docker run -dit \
 	--network "$SPACESTATION_NETWORK_NAME" \
 	"${SPACESTATION_IMAGE_NAME}"
 
-sudo docker exec -ti "$SPACESTATION_CONTAINER_NAME" bash -c "/usr/local/bin/docker-wrapper"
+writeToProvisioningLog "execute docker-wrapper script at '${SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH}' on '${SPACESTATION_CONTAINER_NAME}'"
+sudo docker exec -ti "$SPACESTATION_CONTAINER_NAME" bash -c "${SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH}"
 
+writeToProvisioningLog "set docker acl on '${SPACESTATION_CONTAINER_NAME}' for user '${GROUNDSTATION_USER}'"
 sudo docker exec -ti "$SPACESTATION_CONTAINER_NAME" bash -c "setfacl -m user:$GROUNDSTATION_USER:rw /var/run/docker.sock"
 
 writeToProvisioningLog "'$SPACESTATION_CONTAINER_NAME' started!"

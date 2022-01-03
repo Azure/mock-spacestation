@@ -4,7 +4,7 @@ ARG SPACESTATION_USER
 ARG PRIV_KEY
 ARG PUB_KEY
 ARG DOCKER_FROM_DOCKER_SCRIPT_URI
-ENV SPACESTATION_DOCKERWRAPPER="/usr/local/bin/docker-wrapper"
+ARG DOCKER_FROM_DOCKER_SCRIPT_PATH
 
 # Install Docker + dependencies and RSync and SSH Server
 RUN apt-get update && apt-get install -y \
@@ -34,8 +34,8 @@ RUN apt-get update \
 RUN adduser -u 5678 --disabled-password --gecos "" ${SPACESTATION_USER}
 
 # get docker from docker script
-RUN curl -s "${DOCKER_FROM_DOCKER_SCRIPT_URI}" -o "${SPACESTATION_DOCKERWRAPPER}"
-RUN chmod +x "${SPACESTATION_DOCKERWRAPPER}"
+RUN curl -s "${DOCKER_FROM_DOCKER_SCRIPT_URI}" -o "${DOCKER_FROM_DOCKER_SCRIPT_PATH}"
+RUN chmod +x "${DOCKER_FROM_DOCKER_SCRIPT_PATH}"
 
 # Write the private and public keys to the new user's environment.  Update permissions on the groundstation directory so the user can read/write to it
 RUN mkdir -p /home/${SPACESTATION_USER}/.ssh  && \
