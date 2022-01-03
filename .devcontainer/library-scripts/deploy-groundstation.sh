@@ -65,20 +65,6 @@ writeToProvisioningLog() {
 	echo "$(date +%Y-%m-%d-%H%M%S): $1" >>"$PROVISIONING_LOG"
 }
 
-# download scripts
-
-info_log "Getting ${docker_in_docker_script_uri}..."
-GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_in_docker_script_uri} | base64)
-export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS
-
-info_log "Getting ${docker_from_docker_script_uri}..."
-SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS=$(curl -s ${docker_from_docker_script_uri} | base64)
-export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS
-
-info_log "Getting ${spacestation_docker_file_uri}..."
-SPACESTATION_DOCKERFILE_CONTENTS=$(curl -s ${spacestation_docker_file_uri} | base64)
-export SPACESTATION_DOCKERFILE_CONTENTS
-
 # ********************************************************
 # Miscellaneous Directories: START
 # ********************************************************
@@ -99,7 +85,7 @@ sudo chown -R "$GROUNDSTATION_USER" "$GROUNDSTATION_ROOTDIR"
 # ********************************************************
 
 sudo bash -c 'cat >> /etc/bash.bashrc' <<EOF
-export GROUNDSTATION_USER=""
+export GROUNDSTATION_USER
 export GROUNDSTATION_VERSION="2.1"
 export GROUNDSTATION_ROOTDIR="/groundstation"
 export GROUNDSTATION_LOGS_DIR="${GROUNDSTATION_ROOTDIR}/logs"
@@ -107,11 +93,11 @@ export GROUNDSTATION_OUTBOX_DIR="${GROUNDSTATION_ROOTDIR}/toSpaceStation"
 export GROUNDSTATION_INBOX_DIR="${GROUNDSTATION_ROOTDIR}/fromSpaceStation"
 export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-in-docker"
 export GROUNDSTATION_SSHKEY_FILEPATH="${HOME}/.ssh/id_rsa_spacestation"
-export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_CONTENTS
 export SPACESTATION_NETWORK_NAME="spaceDevVNet"
+export SPACESTATION_DOCKERFILE_PATH="/tmp/Dockerfile.Spacestation"
 export SPACESTATION_CONTAINER_NAME="mockspacestation"
-export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_CONTENTS
-export SPACESTATION_DOCKERFILE_CONTENTS
+export SPACESTATION_IMAGE_NAME="${SPACESTATION_CONTAINER_NAME}-img"
+export SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-from-docker"
 export PROVISIONING_LOG="${GROUNDSTATION_LOGS_DIR}/deploy-groundstation.log"
 echo ""
 echo ""
