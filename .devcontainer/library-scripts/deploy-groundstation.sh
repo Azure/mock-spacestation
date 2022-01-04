@@ -34,6 +34,9 @@ export GROUNDSTATION_OUTBOX_DIR="${GROUNDSTATION_ROOTDIR}/toSpaceStation"
 export GROUNDSTATION_INBOX_DIR="${GROUNDSTATION_ROOTDIR}/fromSpaceStation"
 export GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH="/usr/local/bin/docker-in-docker"
 export GROUNDSTATION_SSHKEY_FILEPATH="${HOME}/.ssh/id_rsa_spacestation"
+export GROUNDSTATION_SSH_SCRIPT_FILENAME="ssh-to-spacestation.sh"
+export GROUNDSTATION_CRON_JOB_FILENAME="sync-to-spacestation.sh"
+export GROUNDSTATION_CRON_JOB_UNTHROTTLED_FILENAME="sync-to-spacestation-unthrottled.sh"
 
 export SPACESTATION_NETWORK_NAME="spaceDevVNet"
 export SPACESTATION_DOCKERFILE_PATH="/tmp/Dockerfile.Spacestation"
@@ -79,7 +82,7 @@ writeToProvisioningLog "Working Dir: ${PWD}"
 
 writeToProvisioningLog "PACKAGES: updating..."
 
-sudo apt-get update &&
+sudo apt-get update >>/dev/null && # TODO (20220103 gmusa): replace with debug file logging
 export DEBIAN_FRONTEND=noninteractive &&
 sudo apt-get -y install --no-install-recommends \
 	util-linux \
@@ -247,49 +250,57 @@ writeToProvisioningLog "RUN CONTAINER: container started!"
 
 # build SSH connection
 
-writeToProvisioningLog "Building SSH connection to '$SPACESTATION_CONTAINER_NAME'..."
+writeToProvisioningLog "getting spacestation container IP address"
 mockspacestation_ip=$(sudo docker inspect ${SPACESTATION_CONTAINER_NAME} --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")
+writeToProvisioningLog "spacestation container IP address '${mockspacestation_ip}' retrieved"
+
+writeToProvisioningLog "updating spacestation known hosts for passwordless SSH to groundstation"
+groundstation_hostname=$(hostname)
+sudo docker exec -ti "${SPACESTATION_CONTAINER_NAME}" \
+	bash -c "ssh-keyscan ${groundstation_hostname} >> /home/${GROUNDSTATION_USER}/.ssh/known_hosts"
+writeToProvisioningLog "groundstation added to spacestation known hosts!"
+
+writeToProvisioningLog "updating groundstation known hosts for passwordless SSH to spacestation"
+ssh-keyscan "${mockspacestation_ip}" >> "${HOME}/.ssh/known_hosts"
+writeToProvisioningLog "spacestation added to groundstation known hosts!"
+
+writeToProvisioningLog "writing SSH connection script to '${SPACESTATION_CONTAINER_NAME}'..."
 {
 	echo "#!/bin/bash"
-	echo "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i \"${GROUNDSTATION_SSHKEY_FILEPATH}\" \"${GROUNDSTATION_USER}\"@\"${mockspacestation_ip}\""
-} >${GROUNDSTATION_ROOTDIR}/ssh-to-spacestation.sh
+	echo "ssh -i \"${GROUNDSTATION_SSHKEY_FILEPATH}\" \"${GROUNDSTATION_USER}\"@\"${mockspacestation_ip}\""
+} >${GROUNDSTATION_ROOTDIR}/${GROUNDSTATION_SSH_SCRIPT_FILENAME}
+sudo chmod 777 ${GROUNDSTATION_ROOTDIR}/${GROUNDSTATION_SSH_SCRIPT_FILENAME}
+writeToProvisioningLog "SSH connection script '${GROUNDSTATION_ROOTDIR}/${GROUNDSTATION_SSH_SCRIPT_FILENAME}' written!"
 
-sudo chmod +x ${GROUNDSTATION_ROOTDIR}/ssh-to-spacestation.sh
+# build cron job
 
-writeToProvisioningLog "Building sync job to '$SPACESTATION_CONTAINER_NAME' (${GROUNDSTATION_ROOTDIR}/sync-to-spacestation.sh)..."
-{
-	echo '#!/bin/bash'
-	echo 'mockSpaceStationIP=$(sudo docker inspect mockspacestation --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")'
-	echo "GROUNDSTATION_SSHKEY_FILEPATH=$GROUNDSTATION_SSHKEY_FILEPATH"
-	echo "GROUNDSTATION_ROOTDIR=$GROUNDSTATION_ROOTDIR"
-	echo "GROUNDSTATION_USER=$GROUNDSTATION_USER"
-	echo "Starting push to SpaceStation..."
-	echo 'rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_ROOTDIR/toSpaceStation/* $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/fromGroundStation/'
-	echo "Starting pull from SpaceStation..."
-	echo 'rsync --rsh="trickle -d 250KiB -u 250KiB  -L 400 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/toGroundStation/* $GROUNDSTATION_ROOTDIR/fromSpaceStation/'
-} >/tmp/sync-to-spacestation.sh
+writeToProvisioningLog "building throttled sync cron job '/tmp/${GROUNDSTATION_CRON_JOB_FILENAME}'..."
+cat > /tmp/${GROUNDSTATION_CRON_JOB_FILENAME} << EOL
+#!/bin/bash
+echo "Starting push to spacestation..."
+rsync --archive --verbose --progress --bwlimit=250 -e "ssh -i ${GROUNDSTATION_SSHKEY_FILEPATH}" ${GROUNDSTATION_ROOTDIR}/toSpaceStation/* ${GROUNDSTATION_USER}@${mockspacestation_ip}:fromGroundStation
+echo "Starting pull from spacestation..."
+rsync --archive --verbose --progress --bwlimit=250 -e "ssh -i ${GROUNDSTATION_SSHKEY_FILEPATH}" ${GROUNDSTATION_USER}@${mockspacestation_ip}:toGroundStation/* ${GROUNDSTATION_ROOTDIR}/fromSpaceStation
+EOL
+sudo chmod 777 /tmp/${GROUNDSTATION_CRON_JOB_FILENAME}
+writeToProvisioningLog "wrote throttled sync cron job!"
 
-sudo chmod +x /tmp/sync-to-spacestation.sh
-sudo chmod 1777 /tmp/sync-to-spacestation.sh
+writeToProvisioningLog "building unthrottled sync cron job '/tmp/${GROUNDSTATION_CRON_JOB_UNTHROTTLED_FILENAME}'..."
+cat > /tmp/${GROUNDSTATION_CRON_JOB_UNTHROTTLED_FILENAME} << EOL
+#!/bin/bash
+echo "Starting push to spacestation..."
+rsync --archive --verbose --progress -e "ssh -i ${GROUNDSTATION_SSHKEY_FILEPATH}" ${GROUNDSTATION_ROOTDIR}/toSpaceStation/* ${GROUNDSTATION_USER}@${mockspacestation_ip}:fromGroundStation
+echo "Starting pull from spacestation..."
+rsync --archive --verbose --progress -e "ssh -i ${GROUNDSTATION_SSHKEY_FILEPATH}" ${GROUNDSTATION_USER}@${mockspacestation_ip}:toGroundStation/* ${GROUNDSTATION_ROOTDIR}/fromSpaceStation
+EOL
+sudo chmod 777 /tmp/${GROUNDSTATION_CRON_JOB_UNTHROTTLED_FILENAME}
+writeToProvisioningLog "wrote unthrottled sync cron job!"
 
-{
-	echo '#!/bin/bash'
-	echo 'mockSpaceStationIP=$(sudo docker inspect mockspacestation --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}")'
-	echo "GROUNDSTATION_SSHKEY_FILEPATH=$GROUNDSTATION_SSHKEY_FILEPATH"
-	echo "GROUNDSTATION_ROOTDIR=$GROUNDSTATION_ROOTDIR"
-	echo "GROUNDSTATION_USER=$GROUNDSTATION_USER"
-	echo "Starting push to SpaceStation..."
-	echo 'rsync --rsh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_ROOTDIR/toSpaceStation/* $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/fromGroundStation/'
-	echo "Starting pull from SpaceStation..."
-	echo 'rsync --rsh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $GROUNDSTATION_SSHKEY_FILEPATH" --remove-source-files --verbose --progress $GROUNDSTATION_USER@$mockSpaceStationIP:/home/$GROUNDSTATION_USER/toGroundStation/* $GROUNDSTATION_ROOTDIR/fromSpaceStation/'
-} >/tmp/sync-to-spacestation-noThrottle.sh
-
-sudo chmod +x /tmp/sync-to-spacestation-noThrottle.sh
-sudo chmod 1777 /tmp/sync-to-spacestation-noThrottle.sh
-
-echo "* * * * * /usr/bin/flock -w 0 /tmp/sync-to-spacestation-job.lock /tmp/sync-to-spacestation.sh >> $GROUNDSTATION_LOGS_DIR/sync-to-spacestation.log 2>&1" >/tmp/sync-to-spacestation-job
+writeToProvisioningLog "scheduling cron job..."
+echo "* * * * * /usr/bin/flock -w 0 /tmp/sync-to-spacestation-job.lock /tmp/${GROUNDSTATION_CRON_JOB_FILENAME} >> $GROUNDSTATION_LOGS_DIR/sync-to-spacestation.log 2>&1" > /tmp/sync-to-spacestation-job
 crontab /tmp/sync-to-spacestation-job
 sudo service cron start
+writeToProvisioningLog "cron job scheduled!"
 
 # ********************************************************
 # Build SSH and RSYNC Jobs: END
