@@ -15,7 +15,7 @@ repository_uri="https://raw.githubusercontent.com/Azure/mock-spacestation"
 branch_name="glenn/jan2022updates"
 script_dir=".devcontainer/library-scripts"
 
-docker_in_docker_filename="docker-in-docker.sh"
+docker_in_docker_filename="docker-in-docker-debian.sh"
 docker_from_docker_filename="docker-debian.sh"
 docker_spacestation_filename="Dockerfile.Spacestation"
 
@@ -118,11 +118,12 @@ if ! command -v docker &> /dev/null; then
 fi
 
 writeToProvisioningLog "check if Remote Container..."
-if printenv | grep -q "REMOTE_CONTAINER"; then
+if printenv | grep -q "REMOTE_CONTAINER" || printenv | grep -q "CODESPACE_NAME"; then
 	writeToProvisioningLog "this is a Remote Container, enabling Docker in Docker..."
 
 	writeToProvisioningLog "Downloading Docker-in-Docker script from '${docker_in_docker_script_uri}' to '$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH'..."
-	curl -s "${docker_in_docker_script_uri}" -o "${GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH}"
+	curl -fsSL "${docker_in_docker_script_uri}" -o "${GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH}"
+	chmod +x "${GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH}"
 	writeToProvisioningLog "Docker-in-Docker downloaded!"
 
 	writeToProvisioningLog "Executing Docker-in-Docker script at '$GROUNDSTATION_DOCKER_IN_DOCKER_SCRIPT_FILEPATH'..."
@@ -214,6 +215,11 @@ sudo docker run -dit \
 	--network "${SPACESTATION_NETWORK_NAME}" \
 	"${SPACESTATION_IMAGE_NAME}"
 writeToProvisioningLog "spacestation container running!"
+
+writeToProvisioningLog "downloading Docker-from-Docker script from '${docker_from_docker_script_uri}' to '$GROUNDSTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH'..."
+curl -fsSL "${docker_from_docker_script_uri}" -o "${GROUNDSTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH}"
+chmod +x "${GROUNDSTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH}"
+writeToProvisioningLog "Docker-from-Docker script downloaded!"
 
 writeToProvisioningLog "execute docker-from-docker script at '${SPACESTATION_DOCKER_FROM_DOCKER_SCRIPT_FILEPATH}' on '${SPACESTATION_CONTAINER_NAME}'"
 sudo docker exec -ti "${SPACESTATION_CONTAINER_NAME}" \

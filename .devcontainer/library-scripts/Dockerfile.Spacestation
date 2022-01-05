@@ -3,8 +3,6 @@ EXPOSE 22
 ARG SPACESTATION_USER
 ARG PRIV_KEY
 ARG PUB_KEY
-ARG DOCKER_FROM_DOCKER_SCRIPT_URI
-ARG DOCKER_FROM_DOCKER_SCRIPT_PATH
 
 # Install Docker + dependencies and RSync and SSH Server
 RUN apt-get update && apt-get install -y \
@@ -29,13 +27,9 @@ RUN echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
    
-RUN apt-get update \
-   && apt-get -y install docker-ce docker-ce-cli containerd.io
-RUN adduser -u 5678 --disabled-password --gecos "" ${SPACESTATION_USER}
+RUN apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io
 
-# get docker from docker script
-RUN curl -s "${DOCKER_FROM_DOCKER_SCRIPT_URI}" -o "${DOCKER_FROM_DOCKER_SCRIPT_PATH}"
-RUN chmod +x "${DOCKER_FROM_DOCKER_SCRIPT_PATH}"
+RUN adduser -u 5678 --disabled-password --gecos "" ${SPACESTATION_USER}
 
 # Write the private and public keys to the new user's environment.  Update permissions on the groundstation directory so the user can read/write to it
 RUN mkdir -p /home/${SPACESTATION_USER}/.ssh  && \
@@ -54,12 +48,6 @@ RUN mkdir -p /home/${SPACESTATION_USER}/.ssh  && \
     cat /home/${SPACESTATION_USER}/.ssh/id_rsa.pub >> /home/${SPACESTATION_USER}/.ssh/authorized_keys && \
     echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} && \
     chmod 0440 /etc/sudoers.d/${SPACESTATION_USER}
-
-# Tweak the SSH config so we can run it
-RUN sed -i'' -e's/^#PermitRootLogin prohibit-password$/PermitRootLogin yes/' /etc/ssh/sshd_config \
-        && sed -i'' -e's/^#PasswordAuthentication yes$/PasswordAuthentication no/' /etc/ssh/sshd_config \
-        && sed -i'' -e's/^#PermitEmptyPasswords no$/PermitEmptyPasswords yes/' /etc/ssh/sshd_config \
-        && sed -i'' -e's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && service ssh start
 
 # Start up the SSH Server Daemon and the docker-in-docker wrapper script
 CMD ["sh", "-c", "/usr/sbin/sshd ; /bin/bash"]
