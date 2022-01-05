@@ -22,32 +22,34 @@ RUN apt-get update && apt-get install -y \
   acl
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-   
+
 RUN echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
-   
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+
 RUN apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io
 
 RUN adduser -u 5678 --disabled-password --gecos "" ${SPACESTATION_USER}
 
 # Write the private and public keys to the new user's environment.  Update permissions on the groundstation directory so the user can read/write to it
-RUN mkdir -p /home/${SPACESTATION_USER}/.ssh  && \
-    mkdir -p /home/${SPACESTATION_USER}/fromGroundStation  && \
-    mkdir -p /home/${SPACESTATION_USER}/toGroundStation  && \
-    mkdir -p /home/${SPACESTATION_USER}/fromGroundStation/queue  && \
-    mkdir -p /home/${SPACESTATION_USER}/toGroundStation/queue  && \
-    echo "$PRIV_KEY" > /home/${SPACESTATION_USER}/.ssh/id_rsa && \
-    echo "$PUB_KEY" > /home/${SPACESTATION_USER}/.ssh/id_rsa.pub && \
-    chmod 600 /home/${SPACESTATION_USER}/.ssh/id_rsa && \
-    chmod 600 /home/${SPACESTATION_USER}/.ssh/id_rsa.pub && \
-    chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation && \
-    chmod 1777 /home/${SPACESTATION_USER}/toGroundStation && \
-    chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation/queue && \
-    chmod 1777 /home/${SPACESTATION_USER}/toGroundStation/queue && \
-    cat /home/${SPACESTATION_USER}/.ssh/id_rsa.pub >> /home/${SPACESTATION_USER}/.ssh/authorized_keys && \
-    echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} && \
-    chmod 0440 /etc/sudoers.d/${SPACESTATION_USER}
+RUN mkdir -p /home/${SPACESTATION_USER}/.ssh \
+  && mkdir -p /home/${SPACESTATION_USER}/fromGroundStation \
+  && mkdir -p /home/${SPACESTATION_USER}/toGroundStation \
+  && mkdir -p /home/${SPACESTATION_USER}/fromGroundStation/queue \
+  && mkdir -p /home/${SPACESTATION_USER}/toGroundStation/queue \
+  && echo "$PRIV_KEY" > /home/${SPACESTATION_USER}/.ssh/id_rsa \
+  && echo "$PUB_KEY" > /home/${SPACESTATION_USER}/.ssh/id_rsa.pub \
+  && echo "$PUB_KEY" > /home/${SPACESTATION_USER}/.ssh/authorized_keys \
+  && chmod 600 /home/${SPACESTATION_USER}/.ssh/id_rsa \
+  && chmod 600 /home/${SPACESTATION_USER}/.ssh/id_rsa.pub \
+  && chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation \
+  && chmod 1777 /home/${SPACESTATION_USER}/toGroundStation \
+  && chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation/queue \
+  && chmod 1777 /home/${SPACESTATION_USER}/toGroundStation/queue \
+  && chmod 777 /home/${SPACESTATION_USER}/.ssh \
+  && echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} \
+  && chmod 700 /home/${SPACESTATION_USER}/.ssh \
+  && chmod 0440 /etc/sudoers.d/${SPACESTATION_USER}
 
 # Start up the SSH Server Daemon and the docker-in-docker wrapper script
 CMD ["sh", "-c", "/usr/sbin/sshd ; /bin/bash"]
