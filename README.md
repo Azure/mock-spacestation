@@ -2,293 +2,183 @@
 
 ## What is mock-spacestation?
 
-mock-spacestation empowers developers and enthusiasts to create their own space-based applications with similar constraints to projects deployed to the International Space Station (ISS) by deploying a Mock Groundstation and Mock Spacestation to Azure via a [Bicep template](https://aka.ms/bicep) or on your local hardware with [Visual Studio Code Remote Dev Containers](https://code.visualstudio.com/docs/remote/create-dev-container).
+mock-spacestation is a [Bicep template](https://aka.ms/bicep) that deploys a Mock Spacestation and Mock Groundstation to Azure to enable developers and enthusiasts to develop and test their own workloads for space with similar constraints to those seen working with the International Space Station (ISS).
 
-The solutions in this repository were used by the Azure Space team during the development of their genomics experiment so that they could understand the challenges they'd face in network latency, container deployment, authentication, and machine configuration, while awaiting installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.
+The Mock Groundstation and Mock Spacestation virtual machines deployed by this template are how the Azure Space team developed and tested their experiment workload while preparing for the installation of the Hewlett Packard Enterprise (HPE) Spaceborne Computer 2 (SBC2) aboard the ISS.
 
-For context, here's a video summary of that experiment conducted in August of 2021:
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fmock-spacestation%2Fmain%2FmockSpacestation.json)
+
+For context, here's a video summary of that experiment executed in August of 2021:
 
 [![Video overview of the Azure and HPE Genomics experiment on the International Space Station](http://img.youtube.com/vi/wZfIUkcgVxI/0.jpg)](https://www.youtube.com/watch?v=wZfIUkcgVxI "Genomics testing on the ISS with HPE Spaceborne Computer-2 and Azure")
 
 ## What it simulates
 
-1. **Processing at The Edge and "Bursting Down" to The Cloud:**
+1. **Latency**
 
-    The Azure Space team used computing power of the HPE SBC2 on-board the ISS to perform intensive work for their genomics experiment, identifying and transmitting just important information to Earth through the narrow 2 megabit per second pipe where it was further processed on a global scale with Azure.
+    The Mock Groundstation is located in East US and the Mock Spacestation is located in Australia to simulate the speed of light latency and many international hops that communication with the ISS traverses.
 
-1. **Latency:**
+2. **Bandwidth**
 
-    There's tremendous latency communicating to an object in orbit and beyond. mock-spacestation simulates a ~400ms latency between the Mock Groundstation and Mock Spacestation to simulate the international hops and routing leveraged by the ISS
+    The Mock Spacestation is configured out of the box to synchronize with the Mock Groundstation at the actual bandwidth cap when communicating with the ISS: 2 *megabits* per second.
 
-1. **Bandwidth:**
+3. **Processing at The Edge and "Bursting Down" to The Cloud**
 
-    2 mega*bits* per second to match the actual bandwidth cap when communicating with the ISS.
+    When the Azure Space team performed their genomics experiment, they used computing power of the HPE SBC2 on-board the ISS to perform intensive work at the edge to determine what is important enough to send back to Earth, then transmitted just those important bits through the narrow 2 megabit per second pipe, then scaled up analysis and compute on a global scale with Azure.
 
-1. **Synchronization:**
+## Get started with mock-spacestation
 
-    The solution in this repository synchornizes two directories every 60 seconds and are rate-limited by configurable bandwidth and latency constraints:
+To get started developing your workload for space:
 
-    - `./groundstation` is a directory for Mock Groundstation to send files to Mock Spacestation
-    - `./spacestation` is a directory for Mock Spacestation to send files to Mock Groundstation
+1. First, you'll **[deploy the Mock Spacestation template](#Deploy-the-Template)**
 
-1. **Connectivity:**
+2. Then, you'll execute a small script to **[get the ssh commands to connect](#Connect-to-the-VMs)** to your Mock Spacestation and Mock Groundstation and **[see the `/trials/` directory synched](#Synchronize-Directories)** between the two with all the bandwidth and latency configured into the deployment
 
-    Just as with the ISS, there is no connectivity between the Mock Spacestation and The Internet.
+You'll need the Azure CLI and the ability to invoke a BASH script to retrieve the SSH key to connect to the Mock Spacestation and Mock Groundstation. If you're on a host that doesn't have those things, or you're not quite sure, you can pretty quickly and easily [use our developer environment](#Using-our-Development-Environment).
 
-    Earth to ISS connectivity is reserved to ~2 hours per week per experiment. This is **not** simulated in this solution, but should be a design consideration for your project.
+## Deploy the Template
 
-## Deploy a Mock Groundstation
+You have two options for deploying mock-spacestation:
 
-There are two ways in this repository to experience building an application with all the latency and disconnectedness of space:
+1. A command-line deployment [via the Azure CLI](#via-Azure-CLI)
 
-1. [A virtual machine hosted in Azure](#Deploy-to-Azure)
-1. [Using Docker containers on your local machine in Visual Studio Code](#Deploy-to-your-local-hardware)
+2. A user-interface deployment [via the Azure Portal](#via-Azure-Portal)
 
-### Deploy to Azure
+### via Azure CLI
 
-All you'll need is an Azure Subscription to get started.
+If you're comfortable with the command line, the Azure CLI provides the `deployment` command group to deploy the Mock Spacestation and Mock Groundstation.
 
-1. Deploy the Mock Groundstation and Mock Spacestation within a virtual machine on Azure:
-
-    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fazure%2Fmock-spacestation%2Fmain%2FAzureVM.json)
-
-1. SSH into the Mock Groundstation virtual machine by executing the command from the Deployment output:
-
-    ![The SSH command output by the virtual machine deployment](docs/images/SSHFromOutput.png)
-
-1. Accept the prompt with `yes` to add the virtual machine to your known hosts:
+1. First, ensure you're logged into the Azure CLI and have set the subscription you want to deploy into: 
 
     ```plaintext
-    Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+    az login
+    az account set --subscription <subscription name or ID> 
     ```
 
-1. Ensure provisioning succeeded
+    Here's a link to the documentation if you need more help logging in: [https://docs.microsoft.com/en-us/cli/azure/reference-index?view=azure-cli-latest#az_login](https://docs.microsoft.com/en-us/cli/azure/reference-index?view=azure-cli-latest#az_login)
 
-    Once you've SSH connected to the virtual machine, verify everything is configured correctly by inspecting a file we write called `./mockspacestation-provisioning.log`.
-
-    Write it's output to the terminal with `cat`:
+2. Next, set yourself some environment variables to make things easier `resourceGroupName` and `deploymentName`:
 
     ```bash
-    cat ./mockspacestation-provisioning.log
+    resourceGroupName="mock-spacestation"
+    deploymentName="mock-spacestation-deploy"
     ```
 
-    You should see a log that ends in **Mock SpaceStation Configuration (v2.0) Complete**:
+3. Then, create a resource group with `az group create`:
+
+    ```bash
+    az group create \
+      --location eastus \
+      --name $resourceGroupName
+    ```
+
+4. And then you can deploy the Mock Spacestation and Mock Groundstation into that resource group with `az deployment group create`:
+
+    ```bash
+    az deployment group create \
+      --resource-group $resourceGroupName \
+      --name $deploymentName \
+      --template-file ./mockSpacestation.json
+    ```
+
+    Note: Azure Portal deployment supports overriding the default Groundstation and Spacestation location(s) via the UI. When using the CLI, you can override the default location(s) using a `--parameters` argument to override the default `groundstationLocation` and/or `spacestationLocation` parameter(s). For example:
+
+    ```bash
+    groundstationLocation="usgovvirginia"
+    spacestationLocation="usgovarizona"
+
+    az deployment group create \
+      --resource-group $resourceGroupName \
+      --name $deploymentName \
+      --parameters groundstationLocation=$groundstationLocation \
+      --parameters spacestationLocation=$spacestationLocation \
+      --template-file ./mockSpacestation.json
+    ```
+
+5. Once that's complete move on to [Connect to the VMs](#Connect-to-the-VMs)
+
+### via Azure Portal
+
+We can deploy the Mock Spacestation and Mock Groundstation to Azure from the portal with just a few clicks.
+
+When you deploy with the "Deploy to Azure" button below, create yourself a new resource group:
+
+![Deploying the mock-spacestation template from the Azure Portal](docs/images/spacestation_template_deployment_smaller.gif)
+
+**Make note of the name of the Resource Group you create and the name of the Deployment that gets generated for you. You'll need those to get your SSH credentials**.
+
+(The generated name is usually something similar to "Microsoft.Template-${timestamp}" like "Microsoft.Template-20210820123456")
+
+![The Deployment UI in the Azure Portal showing the Deployment Name](docs/images/portal-deployment-name-smaller.png)
+
+1. Deploy mock-spacestation into a new resource group:
+
+    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fmock-spacestation%2Fmain%2FmockSpacestation.json)
+
+2. Once that's complete, move on to [Connect to the VMs](#Connect-to-the-VMs)
+
+## Connect to the VMs
+
+After you've deployed the Mock Spacestation template, use [./getConnections.sh](./getConnections.sh) to get connected to the Mock Groundstation and Mock Spacestation.
+
+1. Invoke `getConnections.sh` and pass it the name of your resource group and the name of the deployment:
+
+    ```bash
+    ./getConnections.sh $resourceGroupName $deploymentName
+    ```
+
+2. `getConnections.sh` will place the private key on your machine and present you with your SSH commands to the Groundstation and Spacestation:
 
     ```plaintext
-    Starting Mock SpaceStation Configuration (v 2.0)
-    -----------------------------------------------------------
-    Mon Oct  4 20:59:26 UTC 2021: Working Dir: /
-    Mon Oct  4 20:59:26 UTC 2021: Installing libraries
-    Mon Oct  4 20:59:44 UTC 2021: Docker Setup Start
-    Mon Oct  4 21:00:25 UTC 2021: Docker Setup Complete
-    Mon Oct  4 21:00:25 UTC 2021: Ground Station OS Setup Start
-    Mon Oct  4 21:00:26 UTC 2021: Ground Station OS Setup Complete
-    Mon Oct  4 21:00:26 UTC 2021: Docker configuration Start
-    Mon Oct  4 21:00:26 UTC 2021: Downloading Library Scripts Start
-    Mon Oct  4 21:00:26 UTC 2021: Downloading Library Scripts Complete
-    Mon Oct  4 21:00:26 UTC 2021: SpaceStation Container Build Start
-    Mon Oct  4 21:04:24 UTC 2021: SpaceStation Container Build Complete
-    Mon Oct  4 21:04:24 UTC 2021: SpaceStation Container Start
-    Mon Oct  4 21:04:25 UTC 2021: SpaceStation Container Complete
-    Mon Oct  4 21:04:26 UTC 2021: Docker configuration End
-    -----------------------------------------------------------
-    Mon Oct  4 21:04:26 UTC 2021: Mock SpaceStation Configuration (v 2.0) Complete.
+    INFO: Success! Private key written to ./mockSpacestationPrivateKey. Run these commands to SSH into your machines...
+    ssh -i mockSpacestationPrivateKey azureuser@mockgroundstation-abcd1234efgh5.eastus.cloudapp.azure.com
+    ssh -i mockSpacestationPrivateKey azureuser@mockspacestation-abcd1234efgh5.australiaeast.cloudapp.azure.com
     ```
 
-    This could take a few minutes, especially at the `SpaceStation Container Build Start` step.
+## Synchronize Directories
 
-    If you do not see **Mock SpaceStation Configuration (v2.0) Complete** continue to `cat` the file until you see this message.
+Once you're connected to the Spacestation, **any files or directories that make their way to the `/home/azureuser/trials` directory will be synched to the same directory on the Groundstation at a rate of 2 megabits per second every minute**.
 
-1. [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
+This scheduled synchronization recreates the time delay and limited bandwidth environment of a real-world experiment executed on the ISS.
 
-    Once the virtual machine has been deployed and the Mock Spacestation Configuration is compelte, get started synchronizing files and ensuring you can connect to the Mock Spacestation following the steps at:
+![The Mock Groundstation and Mock Spacestation /trials directories in sync](docs/images/synched-stations.png)
 
-    [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
-
-### Deploy to your local hardware
-
-#### Local Prerequisites
-
-Running the Mock Groundstation and Mock Spacestation locally requires you to install these prerequisites:
-
-- [Visual Studio Code](https://code.visualstudio.com/Download)
-- [The Remote Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- [The Windows Subsystem for Linux (WSL2)](https://docs.microsoft.com/en-us/windows/wsl/install)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop)
-- [Setup Docker to use WSL2](https://docs.microsoft.com/en-us/windows/wsl/tutorials/wsl-containers)
-
-#### Start containers within Visual Studio Code
-
-Once you have the prerequisites installed follow these steps to get started:
-
-1. Clone this repository
+1. Place a file or directory in `/home/azureuser/trials`:
 
     ```bash
-    git clone https://github.com/Azure/mock-spacestation.git
+    # on the Mock Spacestation
+    echo "Hello! It is currently $(date) on the mockSpacestation! Happy Hacking!" >> /home/azureuser/trials/hello.txt
     ```
 
-1. Open Visual Studio Code from the repository
-
-    First, change directories to the repository you just cloned:
+2. And within a minute or so, on the Mock Groundstation, you should see that file in the same directory:
 
     ```bash
-    cd mock-spacestation
+    # now on the Mock Groundstation
+    cd /home/azureuser/trials
+    cat hello.txt
+    Hello! It is currently Fri Aug 20 21:10:10 UTC 2021 on the mockSpacestation! Happy Hacking!
     ```
 
-    Then open the folder with Visual Studio Code by executing `code .` (the period character is required):
+3. On the Mock Spacestation, you can inspect the contents of `azure-sync.log` to see file and directory transmission history and transfer speeds:
 
     ```bash
-    code .
+    # back on the Mock Spacestation
+    cat /home/azureuser/azure-sync.log
     ```
 
-1. Build the Mock Groundstation and Mock Spacestation
-
-    From Visual Studio Code's Command Palette (F1) run the command: `Remote-Containers: Open Folder in Container...`
-
-    After a few minutes, Visual Studio Code will re-open the repository inside of a container. You'll know it was successful when you see this in the lower-left corner of Visual Studio Code:
-
-    ![Mock Spacestation Remote Container Opened in Visual Studio Code](docs/images/remoteContainerConnected.png)
-
-1. Open a terminal in the devcontainer
-
-    You can use Visual Studio Code's toolbar > Terminal > New Terminal.
-
-    Or, use the keyboard shortcut `` ctrl + ` ``
-
-1. [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
-
-    Once the containers have been built, get started synchronizing files and ensuring you can connect to the Mock Spacestation following the steps at:
-
-    [Validate Mock Spacestion Connection](#Validate-Mock-Spacestation-Connection)
-
-1. Get started [writing your app](#Writing-your-app)
-
-## Validate Mock Spacestation Connection
-
-Whether you deployed the Mock Groundstation to Azure or have it running locally in Visual Studio Code, the scripts within this repository should automate everything you need to start synchronizing a Mock Groundstation to a Mock Spacestation.
-
-1. Write a new message in the `/groundstation` directory
-
-    The `/groundstation` directory is configured to synchronize to the Mock Spacestation with the latency experienced communicating with the ISS.
-
-    Let's write a file to this directory so we can see it synchronized to the Mock Spacestation:
-
-    ```bash
-    echo "Hello! It is currently $(date) on the groundstation! Is anybody home?" >> groundstation/helloFromGroundstation.txt
-    ```
-
-1. Connect to the Mock Spacestation
-
-    Now let's go see that file on the Mock Spacestation.
-
-    Connect to the Mock Spacestation with the script at the root of the repository:
-
-    ```bash
-    ./ssh-to-spacestation.sh
-    ```
-
-1. Check the contents of `/groundstation`
-
-    We should see that file we earlier authored on the Mock Groundstation in the `/groundstation` directory. Let's check it out:
-
-    ```bash
-    ls groundstation
-    # helloFromGroundstation.txt
-    ```
-
-    and inside the file we should see our output:
-
-    ```bash
-    cat groundstation/helloFromGroundstation.txt
-    # Hello! It is currently Mon Oct  4 16:20:10 EDT 2021 on the groundstation! Is anybody home?
-    ```
-
-1. Write a reply in the `/spacestation` directory:
-
-    The `/spacestation` directory, too, is configured to synchronize to the Mock Groundstation with the latency experienced communicating with the ISS.
-
-    Let's write a file to this directory so we can see it synchronized to the Mock Groundstation:
-
-    ```bash
-    echo "Hi there groundstation! It is currently $(date) on the spacestation! The weather is fine." >> spacestation/helloFromSpacestation.txt
-    ```
-
-1. Exit the Mock Spacestation to return to the Mock Groundstation
-
-    Closing the SSH connection returns you to the Mock Groundstation.
-
-    You can do this with the `exit` command:
-
-    ```bash
-    exit
-    ```
-
-    You'll see some message about being disconnected from a host:
-
-    ```bash
-    logout
-    Connection to #.#.#.# closed.
-    ```
-
-1. Check the contents of `/spacestation`
-
-    We should see that file we earlier authored on the Mock Spacestation in the `/spacestation` directory. Let's check it out:
-
-    ```bash
-    ls spacestation
-    # helloFromSpacestation.txt
-    ```
-
-    and inside the file we should see our output:
-
-    ```bash
-    cat spacestation/helloFromSpacestation.txt
-    # Hi there groundstation! It is currently Mon Oct  4 16:23:05 EDT 2021 on the spacestation! The weather is fine?
-    ```
-
-That's it! Any files you place in `/groundstation` will synchronize to `/groundstation` aboard the Mock Spacestation and files placed in `/spacestation` will synchronize to `/spacestation` on the Mock Groundstation!
-
-## Writing your app
-
-Containerize your app and mount the `/spacestation` directory to start synching app output and experiment results to the groundstation.
-
-In the following steps we'll show you how you can run a dotnet application on the Mock Spacestation.
-
-1. Clone and build the [dotnetapp sample](https://github.com/dotnet/dotnet-docker/tree/main/samples/dotnetapp):
+4. Which yields output from `rsync` operations like:
 
     ```plaintext
-    docker build --pull -t dotnetapp .
+    sent 177 bytes  received 66 bytes  44.18 bytes/sec
+    total size is 92  speedup is 0.38
+    opening connection using: ssh -i /home/azureuser/.ssh/mockSpacestationPrivateKey -l azureuser mockgroundstation-abcd1234efgh5.eastus.cloudapp.azure.com rsync --server -vvlogDtprze.iLsfxC --bwlimit=250 . /home/azureuser/trials  (12 args)
+    sending incremental file list
+    delta-transmission enabled
+    hello.txt is uptodate
+    total: matches=0  hash_hits=0  false_alarms=0 data=0
     ```
 
-1. Save your docker image to a local file store:
-
-    ```plaintext
-    docker save --output ./dotnetsample-img.tar dotnetsample:latest
-    ```
-
-1. From Visual Studio Code's Terminal create a file `load-and-start.sh` to bootstrap your container run:
-
-    ```bash
-    touch load-and-start.sh
-    ```
-
-1. Add the docker commands you'll need to run the container to `load-and-start.sh`:
-
-    Copy these contents into `load-and-start.sh`:
-
-    ```bash
-    #!/usr/bin/env bash
-    docker load --input ./dotnetsample-img.tar
-    docker run -d dotnetsample:latest --volume=/home/azureuser/spacestation:/spacestation Hello .NET from spacestation.
-    ```
-
-1. Execute `load-and-start.sh` from the Visual Studio Code Terminal:
-
-    ```bash
-    ./load-and-start.sh
-    ```
-
-1. Anything your app writes to `/spacestation` will be replicated to `/groundstation`
+**Happy hacking!** Continue reading on for more information about how we built the Genomics experiment on Azure using the HPE SBC2 and the ISS, or how we setup our developer machines with containers to collaborate.
 
 ## An Example "Burst Down" Workload
 
@@ -307,11 +197,11 @@ More technical information on the experiment can be found at this blog post: [ht
 - The Python workload uses awk and grep to compare generated reads against the wild-type human genome segments.
 
 - If a perfect match cannot be found for a read, it’s assumed to be a potential mutation and is compressed into an output folder on the Spaceborne Computer-2 network-attached storage device.
-After the Python workload completes, the compressed output folder is sent to the HPE groundstation on Earth via rsync.
+After the Python workload completes, the compressed output folder is sent to the HPE ground station on Earth via rsync.
 
 ### On Earth
 
-- The HPE groundstation uploads the data it receives to Azure, writing it to Azure Blob Storage through azcopy.
+- The HPE ground station uploads the data it receives to Azure, writing it to Azure Blob Storage through azcopy.
 
 - An event-driven, serverless function written in Python and hosted in Azure Functions monitors Blob Storage, retrieving newly received data and sending it to the Microsoft Genomics service via its REST API.
 
@@ -322,3 +212,31 @@ After the Python workload completes, the compressed output folder is sent to the
 - A second serverless function hosted in Azure Functions retrieves the VCF records, using the determined location of each mutation to query the dbSNP database hosted by the National Institute of Health—as needed to determine the clinical significance of the mutation—and writes that information to a JSON file in Blob Storage.
 
 - Power BI retrieves the data containing clinical significance of the mutated genes from Blob Storage and displays it in an easily explorable format.
+
+## Using our Development Environment
+
+Whether you're on Windows or Linux or otherwise, it's pretty handy to use a [container described in the repository](./devcontainer/Dockerfile) as your development environment.
+
+Our environment comes with all the tools we used to author this repo so it's where we can best ensure compatibility (plus, we just think it's pretty cool to have our developer machines ready to go with all the tools we need in seconds).
+
+It's really easy to get started with GitHub Codespaces and/or Visual Studio Code.
+
+### GitHub Codespaces
+
+If you or your organization uses Codespaces, it's remarkably easy to use our development environment. Just click the green `Code` icon on the main page of this repository and select `New Codespace`:
+
+![Launching the dev environment with GitHub Codespaces](docs/images/spacestation_codespaces_smaller.gif)
+
+What are Codespaces? Get more information here: [https://docs.github.com/en/codespaces](https://docs.github.com/en/codespaces)
+
+### Visual Studio Code Remote - Containers
+
+It's also easy to use our development environment with Visual Studio Code and the Remote - Containers extension:
+
+![Launching the dev environment with Visual Studio Code](docs/images/remote-containers-readme.gif)
+
+What is the Visual Studio Code Remote - Containers extension? Get installation steps and more information here: [https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+### Manually connecting to the Spacestation and Groundstation
+
+You can also get configured to SSH into the Spacestation and Groundstation manually: [docs/manually-get-ssh-key.md](docs/manually-get-ssh-key.md)
