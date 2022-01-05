@@ -3,6 +3,8 @@ EXPOSE 22
 ARG SPACESTATION_USER
 ARG PRIV_KEY
 ARG PUB_KEY
+ARG DOCKER_FROM_DOCKER_SCRIPT_URI
+ARG DOCKER_FROM_DOCKER_SCRIPT_FILEPATH="/tmp/docker-from-docker"
 
 # Install Docker + dependencies and RSync and SSH Server
 RUN apt-get update && apt-get install -y \
@@ -50,6 +52,9 @@ RUN mkdir -p /home/${SPACESTATION_USER}/.ssh \
   && echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} \
   && chmod 700 /home/${SPACESTATION_USER}/.ssh \
   && chmod 0440 /etc/sudoers.d/${SPACESTATION_USER}
+
+ADD "$DOCKER_FROM_DOCKER_SCRIPT_URI" "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH"
+RUN chmod +x "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH"
 
 # Start up the SSH Server Daemon and the docker-in-docker wrapper script
 CMD ["sh", "-c", "/usr/sbin/sshd ; /bin/bash"]
