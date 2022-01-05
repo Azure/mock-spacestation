@@ -19,6 +19,19 @@ RUN groupadd --gid $USER_GID $GROUNDSTATION_USER \
     && echo $GROUNDSTATION_USER ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$GROUNDSTATION_USER \
     && chmod 0440 /etc/sudoers.d/$GROUNDSTATION_USER
 
+# run docker-in-docker
+
+ADD https://raw.githubusercontent.com/microsoft/vscode-dev-containers/baee53e329f84d2de4bda861dfb231a90088d3b5/script-library/docker-debian.sh /tmp/scripts/docker-debian.sh.sh
+RUN chmod +x /tmp/scripts/docker-debian.sh.sh
+
+RUN rm -f /usr/local/share/docker-init.sh \
+    && bash /tmp/scripts/docker-debian.sh.sh "true" "/var/run/docker-host.sock" "/var/run/docker.sock" "${GROUNDSTATION_USER}";
+
+RUN SOURCE_SOCKET="/var/run/docker-host.sock" \
+    && TARGET_SOCKET="/var/run/docker.sock" \
+    && sudo touch "${SOURCE_SOCKET}" \
+    && sudo ln -s "${SOURCE_SOCKET}" "${TARGET_SOCKET}"
+
 # ********************************************************
 # Setup root directory and update permissions
 # ********************************************************
