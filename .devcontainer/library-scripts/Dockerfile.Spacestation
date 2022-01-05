@@ -44,17 +44,15 @@ RUN mkdir -p /home/${SPACESTATION_USER}/.ssh \
   && echo "$PUB_KEY" > /home/${SPACESTATION_USER}/.ssh/authorized_keys \
   && chmod 600 /home/${SPACESTATION_USER}/.ssh/id_rsa \
   && chmod 600 /home/${SPACESTATION_USER}/.ssh/id_rsa.pub \
-  && chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation \
-  && chmod 1777 /home/${SPACESTATION_USER}/toGroundStation \
-  && chmod 1777 /home/${SPACESTATION_USER}/fromGroundStation/queue \
-  && chmod 1777 /home/${SPACESTATION_USER}/toGroundStation/queue \
-  && chmod 777 /home/${SPACESTATION_USER}/.ssh \
+  && chmod -R 777 /home/${SPACESTATION_USER}/ \
   && echo ${SPACESTATION_USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${SPACESTATION_USER} \
   && chmod 700 /home/${SPACESTATION_USER}/.ssh \
   && chmod 0440 /etc/sudoers.d/${SPACESTATION_USER}
 
 ADD "$DOCKER_FROM_DOCKER_SCRIPT_URI" "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH"
 RUN chmod +x "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH" && "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH"
+
+RUN service ssh start
 
 # Start up the SSH Server Daemon and the docker-in-docker wrapper script
 CMD ["sh", "-c", "/usr/sbin/sshd ; /bin/bash"]
