@@ -52,7 +52,11 @@ RUN mkdir -p /home/${SPACESTATION_USER}/.ssh \
 ADD "$DOCKER_FROM_DOCKER_SCRIPT_URI" "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH"
 RUN chmod +x "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH" && "$DOCKER_FROM_DOCKER_SCRIPT_FILEPATH"
 
-RUN service ssh start
+# Tweak the SSH config so we can run it
+RUN sed -i'' -e's/^#PermitRootLogin prohibit-password$/PermitRootLogin yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PasswordAuthentication yes$/PasswordAuthentication no/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PermitEmptyPasswords no$/PermitEmptyPasswords yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && service ssh start
 
 # Start up the SSH Server Daemon and the docker-in-docker wrapper script
 CMD ["sh", "-c", "/usr/sbin/sshd ; /bin/bash"]
